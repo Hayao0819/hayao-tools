@@ -1,0 +1,22 @@
+#!/bin/sh
+
+blockdir=/dev/block/bootdevice/by-name
+output=/sdcard/Download/PartitionBackup
+exclude="userdata,hoge"
+
+if ! [ "$(whoami)" = root ]; then
+    echo "Run as root" >&2
+    exit 1
+fi
+
+mkdir -p "$output"
+
+
+for file in "$blockdir/"*; do
+    if echo "$exclude" | tr "," "\n" | grep -qx "$(basename "$file")"; then
+        continue
+    fi
+
+    #fileはフルパス
+    dd if="$file" of="${output}/$(basename "$file")"
+done

@@ -1,0 +1,104 @@
+#!/usr/bin/env bash
+#
+# Yamada Hayao <hayao@fascode.net> <Twitter: @Hayao0819>
+# (c) 2019-2021 Fascode Network
+#
+#================================================================
+#
+#         DO WHAT THE FUCK YOU WANT TO PUBLIC LICENSE 
+#                     Version 2, December 2004 
+#
+#  Copyright (C) 2004 Sam Hocevar <sam@hocevar.net> 
+#
+#  Everyone is permitted to copy and distribute verbatim or modified 
+#  copies of this license document, and changing it is allowed as long 
+#  as the name is changed. 
+#
+#             DO WHAT THE FUCK YOU WANT TO PUBLIC LICENSE 
+#    TERMS AND CONDITIONS FOR COPYING, DISTRIBUTION AND MODIFICATION 
+#
+#   0. You just DO WHAT THE FUCK YOU WANT TO.
+#
+#================================================================
+#
+# shellcheck disable=SC1102,SC2120,SC2155,SC2294
+#
+
+set -Eeub
+max_process=0 output="" verbose=false
+readarray -t pkglist < <(pacman -Qq)
+
+_help() {
+    echo -e "usage ${0} [options] [command]\n"
+    echo " General options:"
+    echo "    -p | --pkg [pkg1,pkg2 ...] Set the list of package to check"
+    echo "    -m | --max [int]           Set max process number (set 0 to unlimit)"
+    echo "    -l | --log [path]          Set the path to output the result"
+    echo "    -v | --verbose             Enable verbose log"
+    echo "    -h | --help                This help message"
+    exit 0
+}
+
+function get_proc_count () { find "${temp_dir}" -mindepth 1 -not -name "done" -printf "%f\n"| wc -l; }
+function pkgcnt() { local _cnt="$(cat "${_pkgcntfile}")" ; [[ "${1-""}" = "+" ]] || { [[ -n "${_cnt}" ]] || echo 0 && echo "${_cnt}"; return 0; } && echo "$(( _cnt + 1 ))" > "${_pkgcntfile}"; }
+
+_checkpkg(){
+    lock_file="${temp_dir}/$(uuidgen)" && touch "${lock_file}" && pkgcnt "+"
+    [[ "${verbose}" = true ]] && echo "Start checking ${1} ... (Running $(get_proc_count)) " >&2
+    while read -r file;do
+        { [[ ! -e "${file}" ]] && [[ ! -L "${file}" ]]; } && echo "${1}: ${file}" >> "${temp}"
+    done < <(
+        insection=false && while read -r line; do
+            case "${line}" in
+                "%FILES%") insection=true ;;
+                "%"*"%") insection=false ;;
+                *) # { [[ "${verbose}" = true ]] && echo Checking "/${line}" >&2; } &
+                   { [[ "${insection}" = true ]] && [[ ! "${line}" = *"/" ]]; } && echo "/${line}" ;;
+            esac
+        done < "$(pacman-conf "DBPath")/local/$(pacman -Q "${1}" | tr " " "-")/files" &
+    )
+    rate="$(( $(pkgcnt) * 10000 / ${#pkglist[@]}))" && f="$((100 + rate % 100))" && echo "$((rate / 100)).${f#1}% Done $(pkgcnt) Packages ${1}" >&2 && rm "${lock_file}"
+}
+
+#-- Parse args --#
+OPTS=("h" "l:" "m:" "p:" "v" ) OPTL=("help" "log" "max:" "pkg:" "verbose") GETOPT=(-o "$(printf "%s," "${OPTS[@]}")" -l "$(printf "%s," "${OPTL[@]}")" -- "${@}")
+getopt -Q "${GETOPT[@]}" || exit 1 && readarray -t OPT < <(getopt "${GETOPT[@]}")
+eval set -- "${OPT[@]}" && unset OPT OPTS OPTL GETOPT
+while true; do
+    case "${1}" in
+        -l | --log    ) output="${2}"                                        && shift 2 ;;
+        -m | --max    ) max_process="${2}"                                   && shift 2 ;;
+        -h | --help   ) _help                                                && exit 0  ;;
+        -v | --verbose) verbose=true                                         && shift 1 ;;
+        -p | --pkg    ) readarray -t pkglist < <(echo "${2}" | tr "," "\n")  && shift 2 ;;
+        --            ) shift 1                                              && break   ;;
+    esac
+done
+
+#-- Prepare --#
+function _trap(){
+    local _exit="${?}" && echo -e "Exception occured" >&2 && rm -rf "${temp}" "${temp_dir}"
+    kill "$(jobs -p)" >/dev/null 2>&1
+    exit "${_exit}"
+}
+trap '_trap' 1 2 3 15
+temp_dir="$(mktemp -d)" temp="$(mktemp)" _pkgcntfile="${temp_dir}/pkgcount" && touch "${_pkgcntfile}"
+pacman -Qq "${pkglist[@]}" 1> /dev/null
+
+#-- Start --#
+if [[ "${max_process}" == "0" ]] || [[ "${#pkglist[@]}" -lt "${max_process}" ]]; then
+    for pkg in "${pkglist[@]}"; do
+        _checkpkg "${pkg}" 
+    done
+else
+    for pkg in "${pkglist[@]}"; do
+        while true; do
+            [[ "$(get_proc_count)" -lt "${max_process}" ]] || sleep 1 && { _checkpkg "${pkg}" & break; }
+        done
+    done
+fi
+
+#-- Exit --#
+echo "Waiting for all processing to complete" >&2 && wait
+[[ -n "${output-""}" ]] && cat "${temp}" > "${output}"
+{ cat "${temp}" && rm -fr "${temp_dir}"; } || exit 0

@@ -1,0 +1,128 @@
+#!/usr/bin/env bash
+
+#        CurrentVersion        >= 5
+if [ -z "$BASH_VERSION" ]; then
+    echo "This script works only Bash 5 or higher."
+    exit 1
+elif ! [[ "${BASH_VERSINFO[0]}" -ge 5 ]]; then
+    echo "Error: Your Bash version is not supported by this script." >&2
+    exit 1
+fi
+
+#-- Initilize --#
+set -Eeuo pipefail
+repo_url=""
+target_dirs=()
+pull_dir=""
+branch="master"
+dont_keep_dotgit=true
+
+#-- FasBashLib 0.2.5.1 --#
+for_each(){
+        local _Item
+        while read -r _Item; do    
+            "${@//"{}"/"${_Item}"}" || return "${?}"
+        done
+}
+
+print_array(){
+    (($# >= 1)) || return 0
+    printf "%s\n" "${@}"
+}
+
+#------------------------#
+
+_help(){
+    echo "Git Sparse Checkout"
+    echo
+    echo "  Usage: $0 [options] <repo> <target dir1> <target dir2> ..."
+    echo "Examlpe: $0 -b master https://github.com/FascodeNet/alterlinux tools"
+    echo
+    echo "Options:"
+    echo "    -b <branch>    Branch to pull from (default: $branch)"
+    echo "    -p <path>      Path to pull to (default: $pull_dir)"
+    echo "    -n             Do not keep .git directory (default: $dont_keep_dotgit)"
+    echo "    -h             Show this help"
+}
+
+_run_in_pulldir(){
+    (
+        cd "$pull_dir" || return 1
+        "$@"
+    ) || return 1
+    return 0
+}
+
+_check_args(){
+    if [[ -z "${repo_url}" ]]; then
+        echo "Error: repo url is not specified"
+        _help
+        return 1
+    fi
+
+    if [[ -z "${target_dirs[*]}" ]]; then
+        echo "Error: target dirs are not specified"
+        _help
+        return 1
+    fi
+
+    if print_array "${target_dirs[@]}" | grep -q -x "/"; then
+        echo "Error: target dir cannot be root"
+        return 1
+    fi
+
+    return 0
+}
+
+_setup_pulldir(){
+    mkdir -p "$pull_dir"
+
+    if [[ -n $(ls "$pull_dir") ]]; then
+        echo "Error: $pull_dir is not empty"
+        return 1
+    fi
+
+    _run_in_pulldir git init
+    _run_in_pulldir git config core.sparsecheckout true
+    _run_in_pulldir git remote add origin "$repo_url"
+}
+
+_setup_sparse(){
+    print_array "${target_dirs[@]#/}" | for_each echo "{}" >> "$pull_dir/.git/info/sparse-checkout"
+
+}
+
+_run_pull(){
+    _run_in_pulldir git pull --depth 1 origin "$branch"
+}
+
+_post_pull(){
+    if [[ "$dont_keep_dotgit" = true ]]; then
+        _run_in_pulldir rm -rf .git
+    fi
+}
+
+#-- Main --#
+while getopts "b:p:kh" opt; do
+    case "$opt" in
+        b) branch="$OPTARG"   ;;
+        p) pull_dir="$OPTARG" ;;
+        k) dont_keep_dotgit=true   ;;
+        h) _help; exit 0      ;;
+        *)
+            _help
+            exit 1
+            ;;
+    esac
+done
+shift $((OPTIND - 1))
+repo_url="${1-""}"
+target_dirs=("${@:2}")
+pull_dir="$(pwd)/$(basename "${repo_url%".git"}")"
+
+#-- Start --#
+_check_args
+_setup_pulldir
+_setup_sparse
+_run_pull
+_post_pull

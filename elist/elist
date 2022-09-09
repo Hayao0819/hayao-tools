@@ -1,0 +1,77 @@
+#!/usr/bin/env bash
+
+# shellcheck source=/dev/null
+source /dev/stdin < <(curl -sL "https://raw.githubusercontent.com/Hayao0819/FasBashLib/26e244d6f3839bcf159787dfd3e230df39e4500c/fasbashlib.sh")
+Fsblib.RequireLib "BetterShell" "ParseArg" "Ini" "Emerge" "Array"
+
+
+# Initial variable
+SpecifiedRepo=()
+#PrintRepoName=false
+Command="None"
+
+HelpMsg(){
+    echo "Usage: elist [option] [command] [args]"
+    echo "A simple tool to print package list"
+    echo
+    echo "Options:"
+    echo "  -r, --repo [repo1,repo2 ...]"
+    echo "                  Print only specified repository (for all)"
+    #echo "  -n, --reponame  Print repository name"
+    echo "  -h, --help      Print this help message and exit"
+    echo
+    echo "Commands:"
+    echo "  all             Print all available packages"
+    echo "  instaled        Print all installed packages"
+    echo "  world           Print all world packages"
+}
+
+# Parse arguments
+ParseArg SHORT="r:nh" LONG="repo:,reponame,help" -- "${@}" || exit 1
+eval set -- "${OPTRET[*]}"
+unset OPTRET
+
+while true; do
+    case "${1}" in
+        -r | --repo)
+            SpecifiedRepo+=("$2")
+            shift 2
+            ;;
+        -n | --reponame)
+            #PrintRepoName=true
+            shift 1
+            ;;
+        -h | --help)
+            HelpMsg
+            exit 0
+            ;;
+        --)
+            shift 1
+            break
+            ;;
+        *)
+            Msg.Error "Argument exception error '${1}'"
+            Msg.Error "Please report this error to the developer." 1
+            ;;
+    esac
+done
+Command="${1-"$Command"}"
+
+case "$Command" in
+    "all")
+        if (( "$(Array.Length SpecifiedRepo)" == 0 )); then
+            Em.GetAllPkgList
+        else
+            Array.ForEach SpecifiedRepo Em.GetRepoPkgList "{}"
+        fi
+        ;;
+    "installed")
+        Em.GetInstalledPkgList
+        ;;
+    "world")
+        Em.GetWorldPkgList
+        ;;
+    "None")
+        Msg.Err "Unknown error."
+        exit 1
+esac

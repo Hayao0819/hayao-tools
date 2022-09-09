@@ -1,0 +1,51 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+Force=false
+
+# shellcheck source=/dev/null
+#source <(curl -sL https://raw.githubusercontent.com/Hayao0819/FasBashLib/build-0.2.x/fasbashlib.sh)
+
+PrintArray(){ printf '%s\n' "${@}"; }
+Bool(){ [[ "${1,,}" = true ]]; }
+Array.Includes(){ eval "PrintArray \"\${${1}[@]}\"" | grep -qx "${2}"; }
+
+GetKernelListFromBoot(){
+    find "/boot" -mindepth 1 -maxdepth 1 -name "vmlinuz-*" -printf "%f\n" | sed 's/vmlinuz-//' | sort -r
+}
+
+GetKernelListFromModuleDir(){
+    find "/lib/modules/" -mindepth 1 -maxdepth 1 -type d -printf "%f\n" | sort -r
+}
+
+GetMakableKernelList(){
+    local kernel module=()
+    # shellcheck disable=SC2034
+    readarray -t module < <(GetKernelListFromModuleDir)
+    while read -r kernel; do
+        if Array.Includes module "$kernel"; then
+            echo "$kernel"
+        fi
+    done < <(GetKernelListFromBoot)
+}
+
+
+Main(){
+    local kernel initramfs
+    while read -r kernel; do
+        initramfs="/boot/initramfs-${kernel}.img"
+        if [[ -f "$initramfs" ]] && ! Bool "$Force"; then
+            echo "initramfs-${kernel}.img already exists" >&2
+            continue
+        fi
+        dracut "$@" "$initramfs" "$kernel"
+    done < <(GetMakableKernelList)
+}
+
+
+if PrintArray "$@" | grep -qx -e "-f" -e "--force"; then
+    Force=true
+fi
+
+Main "$@"

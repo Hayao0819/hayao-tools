@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+set -Eeu -o pipefail
+# shellcheck source=/dev/null
+source /dev/stdin < <(curl -sL "https://github.com/Hayao0819/FasBashLib/releases/download/v0.2.5/fasbashlib.sh")
+(( "$UID" == 0 )) || { Msg.Err "Please run as root."; exit 1; }
+readarray -t EntryList < <(awk -F\' '/menuentry / {print $2}' /boot/grub/grub.cfg | grep -v "^$")
+LastEntry=$(
+    last="$(grub-editenv list  | cut -d "=" -f 2-)"
+    [[ -n "${last-""}" ]] || exit 0
+    eval "Array=($(grep "$last" /boot/grub/grub.cfg))"
+    # shellcheck disable=SC2154
+    echo "${Array[1]}"
+)
+grub-reboot "$(Choice -d "$LastEntry" -p "Select an entry to boot:" "${EntryList[@]}")" && reboot
