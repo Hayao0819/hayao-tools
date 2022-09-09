@@ -1,0 +1,303 @@
+#!/usr/bin/env bash
+#
+# kernel-manager - A simple script to manage kernels
+#
+# <Author>
+#       Name: Yamada Hayao
+#      Email: hayao@fascode.net
+#    Twitter: @Hayao0819
+#  Instagram: @Hayao0819
+#     GitHub: @Hayao0819
+#     GitLab: @Hayao0819
+#     Blog: http://hayao.fascode.net
+#
+# <LICENSE>
+# "THE MIT SUSHI-WARE LICENSE"
+#
+# Copyright 2022 Yamada Hayao
+#
+# - You agree that "the author (copyright holder) is not responsible for the software".
+# - You place a copyright notice or this permission notice on all copies of the Software or any other material part of the Software.
+#
+# If the above two conditions are met, the following rights are granted.
+#
+# - The right to use, copy, modify and redistribute without charge and without restriction.
+# - The right to buy the author (copyright holder) of the software a bowl of sushi🍣.
+#
+# based [SUSHI-WARE LICENSE](https://github.com/MakeNowJust/sushi-ware)
+#
+# <Special thanks>
+# https://youtu.be/-iFEKeULaIo
+#
+
+
+PRODUCT_VERSION="20220909"
+BACKUP_DIR="/etc/kernel-manager/backup/"
+SOURCE_BACKUP_DIR="${BACKUP_DIR}/source/"
+KERNEL_BACKUP_DIR="${BACKUP_DIR}/kernel/"
+INITRAMFS_BACKUP_DIR="${BACKUP_DIR}/initramfs/"
+CONFIG_BACKUP_DIR="${BACKUP_DIR}/config/"
+
+ARCHIVE_FORMAT=".tar.gz"
+
+set -Eeuo pipefail
+
+# shellcheck source=/dev/null
+source <(curl -sL "https://github.com/Hayao0819/FasBashLib/releases/download/v0.2.5.1/fasbashlib.sh")
+
+FileList(){
+    find "$1" -mindepth 1 -maxdepth 1 -type f
+}
+
+DirList(){
+    find "$1" -mindepth 1 -maxdepth 1 -type d
+}
+
+HelpDoc(){
+    echo "Kernel manager for Gentoo Linux"
+    echo
+    echo " Usage: kernel-manager [options] <command> [args]"
+    echo
+    echo "General options:"
+    echo "    -h | --help      Show this help message"
+    echo
+    echo "Commands:"
+    echo "  <General>"
+    echo "     help                               | Show this help message"
+    echo "     version                            | Show version"
+    echo "  <List>                                |"
+    echo "     list-source                        | List all source kernels"
+    echo "     list-kernel                        | List all installed kernels"
+    #echo "  <Build>                               |"
+    #echo "     build-kernel    [kernel]           | Build kernel (run 'make')"
+    #echo "     build-initramfs [kernel]           | Build initramfs"
+    #echo "  <Install>                             |"
+    #echo "     install [kernel]                   | Compile and install the kernel"
+    #echo "     install-kernel  [kernel]           | Install the kernel (run 'make install')"
+    #echo "     install-modules [kernel]           | Install the kernel modules (run 'make modules_install')"
+    #echo "  <Remove>                              |"
+    #echo "     remove [kernel]                    | Remove all files (kernel, modules, config)"
+    #echo "     remove-source [kernel]             | Remove the kernel source"
+    #echo "     remove-kernel [kernel]             | Remove the kernel"
+    #echo "     remove-config [kernel]             | Remove the kernel config"
+    #echo "     remove-initramfs [kernel]          | Remove initramfs"
+    echo "  <Backup>                              |"
+    #echo "     backup [kernel]                    | Backup all files (source, kernel, config, initramfs)"
+    echo "     backup-source [kernel]             | Backup the kernel source"
+    #echo "     backup-kernel [kernel]             | Backup the kernel file"
+    #echo "     backup-config [kernel]             | Backup the kernel configuration file"
+    #echo "     backup-initramfs [kernel]          | Backup the initramfs"
+    echo "  <Backup List>                         |"
+    echo "     backup-list-source                 | List all backup source kernels"
+    #echo "     backup-list-kernel                 | List all backup kernels"
+    #echo "     backup-list-config                 | List all backup kernel configs"
+    #echo "     backup-list-initramfs              | List all backup initramfs"
+    echo "  <Backup Remove>                       |"
+    echo "     backup-remove-source [kernel]      | Remove the backup kernel source"
+    #echo "     backup-remove-kernel [kernel]      | Remove the backup kernel"
+    #echo "     backup-remove-config [kernel]      | Remove the backup kernel config"
+    #echo "     backup-remove-initramfs [kernel]   | Remove the backup initramfs"
+    #echo "  <Restore>                             |"
+    #echo "     restore [kernel]                   | Restore all files (source, kernel, config, initramfs)"
+    #echo "     restore-source [kernel]            | Restore the kernel source"
+    #echo "     restore-kernel [kernel]            | Restore the kernel from the backup"
+    #echo "     restore-config [kernel]            | Restore the kernel configuration"
+    #echo "     restore-initramfs [kernel]         | Restore the initramfs"
+    #echo "  <Others>                              |"
+    #echo "     rebuild-initramfs                  | Rebuild all initramfs"
+    #echo "     update-grub                        | Update grub config"
+    #echo "     diff-config [kernel1] [kernel2]    |    Compare two config files"
+    #echo "     menuconfig [kernel]                | Open the kernel configuration file with menuconfig"
+    #echo "     upload [kernel]                    | Upload the kernel to GitHub Gists"
+}
+
+#-- Internal functions --#
+GetKernelSourceList(){
+    DirList "/usr/src" | GetBaseName | grep -E "^linux-"
+}
+
+GetCurrentKernel(){
+    uname -r
+}
+
+GetCurrentKernelSource(){
+    GetKernelSourceList | grep "$(GetCurrentKernel)"
+}
+
+GetKernelFileList(){
+    FileList "/boot" | GetBaseName | grep -E "^vmlinuz-"
+}
+
+# カーネルソースのディレクトリのフルパスを返します
+GetTargetKernelSource(){
+    if [[ -n "${1:-""}" ]]; then
+        if GetKernelSourceList | Match "${1}"; then
+            echo "${1}"
+        fi
+    fi
+
+    local KernelSourceList=() ChoiceArgs=() CurrentKernelSource Path
+    CurrentKernelSource="$(GetCurrentKernelSource)"
+    readarray -t KernelSourceList < <(GetKernelSourceList)
+    [[ -n "${CurrentKernelSource}" ]] && ChoiceArgs+=(-d "$CurrentKernelSource")
+    ChoiceArgs+=(-p "Please select a kernel source")
+    ChoiceArgs+=("${KernelSourceList[@]}")
+    Path="$(Choice "${ChoiceArgs[@]}" | sed -e "s|^|/usr/src/|")"
+    if [[ ! -e "${Path}" ]]; then
+        Msg.Err "Invalid kernel source"
+        return 1
+    fi
+    echo "$Path"
+    return 0
+}
+GetTargetKernelSourceBackup(){
+    if [[ -n "${1:-""}" ]]; then
+        if GetKernelSourceBackupList | Match "${1}"; then
+            echo "${1}"
+        fi
+    fi
+
+    local KernelSourceBackupList=() ChoiceArgs=() Path
+    readarray -t KernelSourceBackupList < <(GetKernelSourceBackupList)
+    ChoiceArgs+=(-p "Please select a kernel source backup")
+    ChoiceArgs+=("${KernelSourceBackupList[@]}")
+    Path="$(Choice "${ChoiceArgs[@]}" | sed -e "s|^|${SOURCE_BACKUP_DIR%/}/|" -e "s|$|${ARCHIVE_FORMAT}|g")"
+    if [[ ! -e "${Path}" ]]; then
+        Msg.Err "Invalid kernel source"
+        return 1
+    fi
+    echo "$Path"
+    return 0
+}
+
+GetCurrentKernelPath(){
+    tr " " "\n" < /proc/cmdline | awk -F "=" '{if($1 = "BOOT_IMAGE"){print $2"\n"; exit}}'
+}
+
+GetKernelSourceBackupList(){
+    FileList "${SOURCE_BACKUP_DIR}" | GetBaseName | grep -E "${ARCHIVE_FORMAT}$" | ForEach CutLastString "{}" "${ARCHIVE_FORMAT}" 
+}
+
+MakeTarBall(){
+    (
+        cd "$1" || exit 1
+        mkdir -p "$(dirname "$2")"
+        tar -z -c -v -f "$2" ./
+    )
+}
+
+RequireRootPermission(){
+    if (( UID != 0 )); then
+        Msg.Err "This command requires root permission"
+        return 1
+    fi
+    return 0
+}
+
+
+#-- General command --#
+Command_General_Help(){
+    HelpDoc
+}
+
+Command_General_Version(){
+    echo "Kernel manager for any Linux distrobution"
+    echo "Version: ${PRODUCT_VERSION}"
+    echo "License: MIT SUSHI-WARE LICENSE"
+    echo "Written by Yamada Hayao"
+}
+
+#-- List command --#
+Command_List_Source(){
+    GetKernelSourceList
+}
+
+Command_List_Kernel(){
+    GetKernelFileList
+}
+
+#-- Backup command --#
+Command_Backup_Source(){
+    RequireRootPermission || return 1
+
+    local SelectedKernelSource
+    SelectedKernelSource="$(GetTargetKernelSource "${1:-""}")"
+    Msg.Info "Backing up the kernel source..."
+
+    local TarBallPath
+    TarBallPath="${SOURCE_BACKUP_DIR}/$(basename "${SelectedKernelSource}")-$(date +%s).tar.gz"
+    MakeTarBall "${SelectedKernelSource}" "${TarBallPath}"
+    Msg.Info "Created kernel source backup: ${TarBallPath}"
+    return 0
+}
+
+#-- Backup list command --#
+Command_Backup_List_Source(){
+    GetKernelSourceBackupList
+}
+
+#-- Backup remove command --#
+Command_Backup_Remove_Source(){
+    RequireRootPermission || return 1
+    GetTargetKernelSourceBackup "${1:-""}" | xargs rm -f
+}
+
+
+#-- Parse options --#
+ParseArg SHORT="h" LONG="help" -- "${@}" || exit 1
+eval set -- "${OPTRET[*]}"
+unset OPTRET
+
+while true; do
+    case "${1}" in
+        -h | --help)
+            HelpDoc
+            exit 0
+            ;;
+        --)
+            shift 1
+            break
+            ;;
+        *)
+            Msg.Err "Argument exception error '${1}'"
+            Msg.Err "Please report this error to the developer." 1
+            ;;
+    esac
+done
+
+# メモ
+# ・関数内でexitしないこと
+# ・全ての関数に"$@"を渡すこと
+case "${1-""}" in
+    # General command
+    help | "")
+        Command_General_Help "$@"
+        ;;
+    version)
+        Command_General_Version "$@"
+        ;;
+    # List command
+    list-source)
+        Command_List_Source "$@"
+        ;;
+    list-kernel)
+        Command_List_Kernel "$@"
+        ;;
+    # Backup command
+    backup-source)
+        Command_Backup_Source "$@"
+        ;;
+    # Backup List command
+    backup-list-source)
+        Command_Backup_List_Source "$@"
+        ;;
+    # Backup Remove command
+    backup-remove-source)
+        Command_Backup_Remove_Source "$@"
+        ;;
+    
+    *)
+        Msg.Err "Command exception error '${1}'"
+        Msg.Err "Please report this error to the developer." 1
+        ;;
+esac
