@@ -31,15 +31,21 @@
 #
 
 
+#-- Config --#
 PRODUCT_VERSION="20220909"
 BACKUP_DIR="/etc/kernel-manager/backup/"
 SOURCE_BACKUP_DIR="${BACKUP_DIR}/source/"
 KERNEL_BACKUP_DIR="${BACKUP_DIR}/kernel/"
 INITRAMFS_BACKUP_DIR="${BACKUP_DIR}/initramfs/"
 CONFIG_BACKUP_DIR="${BACKUP_DIR}/config/"
-
 ARCHIVE_FORMAT=".tar.gz"
 
+
+#-- Internal Config --#
+ListCommand_Options_Raw=false
+ListCommand_Options_Latest=false
+
+#-- Load library --#
 set -Eeuo pipefail
 
 # shellcheck source=/dev/null
@@ -60,6 +66,10 @@ HelpDoc(){
     echo
     echo "General options:"
     echo "    -h | --help      Show this help message"
+    echo
+    echo "List options:"
+    echo "    --latest         Show only latest backup"
+    echo "    --raw            Output raw data (list command)"
     echo
     echo "Commands:"
     echo "  <General>"
@@ -84,7 +94,7 @@ HelpDoc(){
     echo "  <Backup>                              |"
     #echo "     backup [kernel]                    | Backup all files (source, kernel, config, initramfs)"
     echo "     backup-source [kernel]             | Backup the kernel source"
-    #echo "     backup-kernel [kernel]             | Backup the kernel file"
+    echo "     backup-kernel [kernel]             | Backup the kernel file"
     #echo "     backup-config [kernel]             | Backup the kernel configuration file"
     #echo "     backup-initramfs [kernel]          | Backup the initramfs"
     echo "  <Backup List>                         |"
@@ -178,6 +188,10 @@ GetKernelSourceBackupList(){
     FileList "${SOURCE_BACKUP_DIR}" | GetBaseName | grep -E "${ARCHIVE_FORMAT}$" | ForEach CutLastString "{}" "${ARCHIVE_FORMAT}" 
 }
 
+GetKernelConfigBackupList(){
+    FileList "${CONFIG_BACKUP_DIR}" | GetBaseName
+}
+
 MakeTarBall(){
     (
         cd "$1" || exit 1
@@ -192,6 +206,14 @@ RequireRootPermission(){
         return 1
     fi
     return 0
+}
+
+OptionEnabled_Raw(){
+    Bool "${ListCommand_Options_Raw}"
+}
+
+OptionEnabled_Latest(){
+    Bool "${ListCommand_Options_Latest}"
 }
 
 
@@ -231,9 +253,82 @@ Command_Backup_Source(){
     return 0
 }
 
+Command_Backup_Config(){
+    RequireRootPermission || return 1
+
+    local SelectedKernelSource
+    SelectedKernelSource="$(GetTargetKernelSource "${1:-""}")"
+    Msg.Info "Backing up the kernel config..."
+
+    local ConfigPath
+    ConfigPath="${CONFIG_BACKUP_DIR}/$(basename "${SelectedKernelSource}")-$(date +%s).config"
+    mkdir -p "$(dirname "${ConfigPath}")"
+    cp "${SelectedKernelSource}/.config" "${ConfigPath}"
+    Msg.Info "Created kernel config backup: ${ConfigPath}"
+    return 0
+}
+
 #-- Backup list command --#
-Command_Backup_List_Source(){
+# Command_Backup_List_Internal_Latest <Command to get backup file name list>
+Command_Backup_List_Internal_Latest(){
+    local FileList=()
+    readarray -t FileList < <("$@")
+
+    # shellcheck disable=SC2016
+    while read -r Kernel; do
+        Array.Print "${FileList[@]}" | grep "${Kernel}-" | sort -n | tail -n 1
+    done < <(Array.ForEach FileList eval 'CutLastString "{}" "-$(GetLastSplitString "-" "{}")"')
+}
+
+Command_Backup_List_Internal_All(){
+    local Line Kernel Date
+    while read -r Line; do
+        Date=$(GetLastSplitString "-" "${Line}")
+        Kernel=$(CutLastString "${Line}" "-${Date}")
+        echo "${Kernel} ($(date --date "@${Date}"))"
+    done < <("$@" | RemoveFileExt)
+}
+
+
+Command_Backup_List_Source_All_Raw(){
     GetKernelSourceBackupList
+}
+
+Command_Backup_List_Source_Latest(){
+    Command_Backup_List_Internal_Latest GetKernelSourceBackupList
+}
+
+Command_Backup_List_Source_All(){
+    Command_Backup_List_Internal_All GetKernelSourceBackupList
+}
+
+Command_Backup_List_Source(){
+    if OptionEnabled_Latest; then
+        Command_Backup_List_Source_Latest
+        return 0
+    fi
+
+    if OptionEnabled_Raw; then
+        Command_Backup_List_Source_All_Raw
+    else
+        Command_Backup_List_Source_All
+    fi
+}
+
+Command_Backup_List_Config_All_Raw(){
+    GetKernelConfigBackupList
+}
+
+Command_Backup_List_Config_All(){
+    Command_Backup_List_Internal_All GetKernelConfigBackupList
+}
+
+Command_Backup_List_Config(){
+    if OptionEnabled_Raw; then
+        Command_Backup_List_Config_All_Raw
+    else
+        Command_Backup_List_Config_All
+    fi
 }
 
 #-- Backup remove command --#
@@ -244,12 +339,20 @@ Command_Backup_Remove_Source(){
 
 
 #-- Parse options --#
-ParseArg SHORT="h" LONG="help" -- "${@}" || exit 1
+ParseArg SHORT="h" LONG="help,raw,latest" -- "${@}" || exit 1
 eval set -- "${OPTRET[*]}"
 unset OPTRET
 
 while true; do
     case "${1}" in
+        --latest)
+            ListCommand_Options_Latest=true
+            shift 1
+            ;;
+        --raw)
+            ListCommand_Options_Raw=true
+            shift 1
+            ;;
         -h | --help)
             HelpDoc
             exit 0
@@ -284,15 +387,21 @@ case "${1-""}" in
         Command_List_Kernel "$@"
         ;;
     # Backup command
-    backup-source)
+    backup-source | baks)
         Command_Backup_Source "$@"
         ;;
+    backup-config | bakc)
+        Command_Backup_Config "$@"
+        ;;
     # Backup List command
-    backup-list-source)
+    backup-list-source | bakls)
         Command_Backup_List_Source "$@"
         ;;
+    backup-list-config | baklc)
+        Command_Backup_List_Config "$@"
+        ;;
     # Backup Remove command
-    backup-remove-source)
+    backup-remove-source | bakrs)
         Command_Backup_Remove_Source "$@"
         ;;
     
