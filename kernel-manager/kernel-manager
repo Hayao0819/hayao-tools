@@ -140,19 +140,26 @@ GetKernelFileList(){
 
 # カーネルソースのディレクトリのフルパスを返します
 GetTargetKernelSource(){
+    local KernelSourceList=()
+    readarray -t KernelSourceList < <(GetKernelSourceList)
+
     if [[ -n "${1:-""}" ]]; then
-        if GetKernelSourceList | Match "${1}"; then
-            echo "${1}"
+        if Array.Includes KernelSourceList "$1"; then
+            Path="$1"
         fi
     fi
 
-    local KernelSourceList=() ChoiceArgs=() CurrentKernelSource Path
-    CurrentKernelSource="$(GetCurrentKernelSource)"
-    readarray -t KernelSourceList < <(GetKernelSourceList)
-    [[ -n "${CurrentKernelSource}" ]] && ChoiceArgs+=(-d "$CurrentKernelSource")
-    ChoiceArgs+=(-p "Please select a kernel source")
-    ChoiceArgs+=("${KernelSourceList[@]}")
-    Path="$(Choice "${ChoiceArgs[@]}" | sed -e "s|^|/usr/src/|")"
+    if [[ -z "${Path:-""}" ]]; then
+        local ChoiceArgs=() CurrentKernelSource Path
+        CurrentKernelSource="$(GetCurrentKernelSource)"
+        [[ -n "${CurrentKernelSource}" ]] && ChoiceArgs+=(-d "$CurrentKernelSource")
+        ChoiceArgs+=(-p "Please select a kernel source")
+        ChoiceArgs+=("${KernelSourceList[@]}")
+        Path="$(Choice "${ChoiceArgs[@]}")"
+    fi
+
+    Path="/usr/src/$Path"
+
     if [[ ! -e "${Path}" ]]; then
         Msg.Err "Invalid kernel source"
         return 1
@@ -161,17 +168,24 @@ GetTargetKernelSource(){
     return 0
 }
 GetTargetKernelSourceBackup(){
+    local KernelSourceBackupList=()
+    readarray -t KernelSourceBackupList < <(GetKernelSourceBackupList)
+
     if [[ -n "${1:-""}" ]]; then
-        if GetKernelSourceBackupList | Match "${1}"; then
-            echo "${1}"
+        if Array.Includes KernelSourceBackupList "$1"; then
+            Path="${1}"
         fi
     fi
 
-    local KernelSourceBackupList=() ChoiceArgs=() Path
-    readarray -t KernelSourceBackupList < <(GetKernelSourceBackupList)
-    ChoiceArgs+=(-p "Please select a kernel source backup")
-    ChoiceArgs+=("${KernelSourceBackupList[@]}")
-    Path="$(Choice "${ChoiceArgs[@]}" | sed -e "s|^|${SOURCE_BACKUP_DIR%/}/|" -e "s|$|${ARCHIVE_FORMAT}|g")"
+    if [[ -z "${Path-:""}" ]]; then
+        local ChoiceArgs=() Path
+        ChoiceArgs+=(-p "Please select a kernel source backup")
+        ChoiceArgs+=("${KernelSourceBackupList[@]}")
+        Path="$(Choice "${ChoiceArgs[@]}")"
+    fi
+
+    Path="${SOURCE_BACKUP_DIR%/}/${Path}.${ARCHIVE_FORMAT#"."}"
+
     if [[ ! -e "${Path}" ]]; then
         Msg.Err "Invalid kernel source"
         return 1
