@@ -252,6 +252,21 @@ Command_List_Kernel(){
     GetKernelFileList
 }
 
+#-- Build command --#
+Command_Build_Kernel(){
+    RequireRootPermission || return 1
+    local KernelSourcePath KernelSourceName
+    KernelSourcePath="$(GetTargetKernelSource "${1:-""}")" || return 1
+    KernelSourceName="$(basename "$KernelSourcePath")"
+    
+    (
+        Msg.Info "Building kernel: $KernelSourceName"
+        Msg.Info "Directory: $KernelSourcePath"
+        cd "$KernelSourcePath" || exit 1
+        make -j "$(nproc)"
+    ) || Msg.Err "Failed to build kernel: $KernelSourceName"
+}
+
 #-- Backup command --#
 Command_Backup_Source(){
     RequireRootPermission || return 1
@@ -416,6 +431,10 @@ case "${1-""}" in
         ;;
     list-kernel)
         Command_List_Kernel "$@"
+        ;;
+    # Build command
+    build-kernel)
+        Command_Build_Kernel "$@"
         ;;
     # Backup command
     backup-source | baks)
