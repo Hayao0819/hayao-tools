@@ -425,10 +425,13 @@ while true; do
     esac
 done
 
+Command="${1:-""}"
+shift 1 || true
+
 # メモ
 # ・関数内でexitしないこと
 # ・全ての関数に"$@"を渡すこと
-case "${1-""}" in
+case "${Command-:""}" in
     # General command
     help | "")
         Command_General_Help "$@"
@@ -471,7 +474,8 @@ case "${1-""}" in
         ;;
     
     *)
-        Msg.Err "Command exception error '${1}'"
-        Msg.Err "Please report this error to the developer." 1
+        Msg.Err "Command exception error '${Command-""}'"
+        Msg.Err "Please report this error to the developer."
+        exit 1
         ;;
 esac
