@@ -383,6 +383,17 @@ Command_Backup_Remove_Source(){
     GetTargetKernelSourceBackup "${1:-""}" | xargs rm -f
 }
 
+#-- Menuconfig --#
+Command_MenuConfig(){
+    RequireRootPermission || return 1
+    local KernelSourcePath
+    KernelSourcePath="$(GetTargetKernelSource "${1:-""}")" || return 1
+    (
+        cd "$KernelSourcePath" || exit 1
+        make menuconfig
+    ) || Msg.Err "Failed to open menuconfig"
+}
+
 
 #-- Parse options --#
 ParseArg SHORT="h" LONG="help,raw,latest" -- "${@}" || exit 1
@@ -453,6 +464,10 @@ case "${1-""}" in
     # Backup Remove command
     backup-remove-source | bakrs)
         Command_Backup_Remove_Source "$@"
+        ;;
+    # Menuconfig command
+    menuconfig)
+        Command_MenuConfig "$@"
         ;;
     
     *)
