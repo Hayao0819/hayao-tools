@@ -34,10 +34,10 @@
 #-- Config --#
 PRODUCT_VERSION="20220909"
 BACKUP_DIR="/etc/kernel-manager/backup/"
-SOURCE_BACKUP_DIR="${BACKUP_DIR}/source/"
-KERNEL_BACKUP_DIR="${BACKUP_DIR}/kernel/"
-INITRAMFS_BACKUP_DIR="${BACKUP_DIR}/initramfs/"
-CONFIG_BACKUP_DIR="${BACKUP_DIR}/config/"
+SOURCE_BACKUP_DIR="${BACKUP_DIR%/}/source/"
+KERNEL_BACKUP_DIR="${BACKUP_DIR%/}/kernel/"
+INITRAMFS_BACKUP_DIR="${BACKUP_DIR%/}/initramfs/"
+CONFIG_BACKUP_DIR="${BACKUP_DIR%/}/config/"
 ARCHIVE_FORMAT=".tar.gz"
 
 
@@ -277,7 +277,7 @@ Command_Backup_List_Internal_Latest(){
     # shellcheck disable=SC2016
     while read -r Kernel; do
         Array.Print "${FileList[@]}" | grep "${Kernel}-" | sort -n | tail -n 1
-    done < <(Array.ForEach FileList eval 'CutLastString "{}" "-$(GetLastSplitString "-" "{}")"')
+    done < <(Array.ForEach FileList eval 'CutLastString "{}" "-$(GetLastSplitString "-" "{}")"' | uniq)
 }
 
 Command_Backup_List_Internal_All(){
@@ -304,7 +304,11 @@ Command_Backup_List_Source_All(){
 
 Command_Backup_List_Source(){
     if OptionEnabled_Latest; then
-        Command_Backup_List_Source_Latest
+        if OptionEnabled_Raw; then
+            Command_Backup_List_Source_Latest_Raw # TODO: Implement
+        else
+            Command_Backup_List_Source_Latest
+        fi
         return 0
     fi
 
@@ -319,11 +323,24 @@ Command_Backup_List_Config_All_Raw(){
     GetKernelConfigBackupList
 }
 
+Command_Backup_List_Config_Latest(){
+    Command_Backup_List_Internal_Latest GetKernelConfigBackupList
+}
+
 Command_Backup_List_Config_All(){
     Command_Backup_List_Internal_All GetKernelConfigBackupList
 }
 
 Command_Backup_List_Config(){
+    if OptionEnabled_Latest; then
+        if OptionEnabled_Raw; then
+            Command_Backup_List_Config_Latest_Raw # TODO: Implement
+        else
+            Command_Backup_List_Config_Latest
+        fi
+        return 0
+    fi
+
     if OptionEnabled_Raw; then
         Command_Backup_List_Config_All_Raw
     else
