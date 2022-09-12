@@ -101,17 +101,17 @@ HelpDoc(){
     echo "  <Backup>                              |"
     #echo "     backup [kernel]                    | Backup all files (source, kernel, config, initramfs)"
     echo "     backup-source [kernel]             | Backup the kernel source"
-    #echo "     backup-kernel [kernel]             | Backup the kernel file"
+    echo "     backup-kernel [kernel]             | Backup the kernel file"
     echo "     backup-config [kernel]             | Backup the kernel configuration file"
     #echo "     backup-initramfs [kernel]          | Backup the initramfs"
     echo "  <Backup List>                         |"
     echo "     backup-list-source                 | List all backup source kernels"
-    #echo "     backup-list-kernel                 | List all backup kernels"
+    echo "     backup-list-kernel                 | List all backup kernels"
     echo "     backup-list-config                 | List all backup kernel configs"
     #echo "     backup-list-initramfs              | List all backup initramfs"
     echo "  <Backup Remove>                       |"
     echo "     backup-remove-source [kernel]      | Remove the backup kernel source"
-    #echo "     backup-remove-kernel [kernel]      | Remove the backup kernel"
+    echo "     backup-remove-kernel [kernel]      | Remove the backup kernel"
     #echo "     backup-remove-config [kernel]      | Remove the backup kernel config"
     #echo "     backup-remove-initramfs [kernel]   | Remove the backup initramfs"
     #echo "  <Restore>                             |"
@@ -122,7 +122,7 @@ HelpDoc(){
     #echo "     restore-initramfs [kernel]         | Restore the initramfs"
     echo "  <Others>                              |"
     #echo "     rebuild-initramfs                  | Rebuild all initramfs"
-    #echo "     update-grub                        | Update grub config"
+    echo "     update-grub                        | Update grub config"
     #echo "     diff-config [kernel1] [kernel2]    |    Compare two config files"
     echo "     menuconfig [kernel]                | Open the kernel configuration file with menuconfig"
     #echo "     upload [kernel]                    | Upload the kernel to GitHub Gists"
@@ -534,6 +534,11 @@ Command_MenuConfig(){
     ) || Msg.Err "Failed to open menuconfig"
 }
 
+Command_UpdateGrub(){
+    RequireRootPermission || return 1
+    Msg.Info "Updating grub..."
+    grub-mkconfig -o "/boot/grub/grub.cfg"
+}
 
 #-- Parse options --#
 ParseArg SHORT="h" LONG="help,raw,latest" -- "${@}" || exit 1
@@ -621,7 +626,10 @@ case "${Command-:""}" in
     menuconfig)
         Command_MenuConfig "$@"
         ;;
-    
+    # Update grub command
+    update-grub)
+        Command_UpdateGrub "$@"
+        ;;
     *)
         Msg.Err "Command exception error '${Command-""}'"
         Msg.Err "Please report this error to the developer."
