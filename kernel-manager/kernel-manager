@@ -39,6 +39,12 @@ KERNEL_BACKUP_DIR="${BACKUP_DIR%/}/kernel/"
 INITRAMFS_BACKUP_DIR="${BACKUP_DIR%/}/initramfs/"
 CONFIG_BACKUP_DIR="${BACKUP_DIR%/}/config/"
 ARCHIVE_FORMAT=".tar.gz"
+KERNEL_FILES=(
+    "/boot/System.map-%VERSION%"
+    "/boot/config-%VERSION%"
+    "/boot/initramfs-%VERSION%.img"
+    "/boot/vmlinuz-%VERSION%"
+)
 
 
 #-- Internal Config --#
@@ -49,7 +55,8 @@ ListCommand_Options_Latest=false
 set -Eeuo pipefail
 
 # shellcheck source=/dev/null
-source <(curl -sL "https://github.com/Hayao0819/FasBashLib/releases/download/v0.2.5.1/fasbashlib.sh")
+#source <(curl -sL "https://github.com/Hayao0819/FasBashLib/releases/download/v0.2.5.1/fasbashlib.sh")
+source <(curl -sL "https://raw.githubusercontent.com/Hayao0819/FasBashLib/85101302574a1fc48fa82cdb125f157f99b6fea6/fasbashlib.sh")
 
 FileList(){
     find "$1" -mindepth 1 -maxdepth 1 -type f
@@ -130,16 +137,78 @@ GetCurrentKernel(){
     uname -r
 }
 
+
+
 GetCurrentKernelSource(){
     GetKernelSourceList | grep "$(GetCurrentKernel)"
+}
+
+GetCurrentKernelPath(){
+    tr " " "\n" < /proc/cmdline | awk -F "=" '{if($1 = "BOOT_IMAGE"){print $2"\n"; exit}}'
 }
 
 GetKernelFileList(){
     FileList "/boot" | GetBaseName | grep -E "^vmlinuz-"
 }
 
+# GetKernelFilesToBackup <kernel version>
+GetKernelFilesToBackup(){
+    local kernel="${1-""}" 
+    [[ -z "$kernel" ]] && return 1
+    local file exitcode=1
+    for file in "${KERNEL_FILES[@]//"%VERSION%"/"$kernel"}"; do
+        if [[ -e "$file" ]]; then
+            echo "$file"
+            exitcode=0
+        fi
+    done
+    return "$exitcode"
+}
+
+GetKernelSourceBackupList(){
+    FileList "${SOURCE_BACKUP_DIR}" | GetBaseName | grep -E "${ARCHIVE_FORMAT}$" | ForEach CutLastString "{}" "${ARCHIVE_FORMAT}" 
+}
+
+GetKernelConfigBackupList(){
+    FileList "${CONFIG_BACKUP_DIR}" | GetBaseName | RemoveFileExt
+}
+
+GetKernelBackupList(){
+    DirList "${KERNEL_BACKUP_DIR}" | GetBaseName
+}
+
+Choice_InstalledKernel(){
+    local KernelList=()
+    readarray -t KernelList < <(GetKernelFileList)
+
+    if [[ -n "${1:-""}" ]]; then
+        if Array.Includes KernelList "$1"; then
+            Path="$1"
+        fi
+    fi
+
+    if [[ -z "${Path:-""}" ]]; then
+        local ChoiceArgs=() CurrentKernelPath Path
+        CurrentKernelPath="vmlinuz-$(GetCurrentKernel)"
+        [[ -n "${CurrentKernelPath}" ]] && ChoiceArgs+=(-d "$CurrentKernelPath")
+        ChoiceArgs+=(-p "Please select an installed kernel")
+        ChoiceArgs+=("${KernelList[@]}")
+        Path="$(Choice "${ChoiceArgs[@]}")"
+    fi
+
+    Path="/boot/$Path"
+
+    if [[ ! -e "${Path}" ]]; then
+        Msg.Err "Invalid kernel"
+        return 1
+    fi
+    echo "$Path"
+    return 0
+}
+
+
 # カーネルソースのディレクトリのフルパスを返します
-GetTargetKernelSource(){
+Choice_KernelSource(){
     local KernelSourceList=()
     readarray -t KernelSourceList < <(GetKernelSourceList)
 
@@ -167,7 +236,8 @@ GetTargetKernelSource(){
     echo "$Path"
     return 0
 }
-GetTargetKernelSourceBackup(){
+
+Choice_KernelSourceBackup(){
     local KernelSourceBackupList=()
     readarray -t KernelSourceBackupList < <(GetKernelSourceBackupList)
 
@@ -177,7 +247,7 @@ GetTargetKernelSourceBackup(){
         fi
     fi
 
-    if [[ -z "${Path-:""}" ]]; then
+    if [[ -z "${Path:-""}" ]]; then
         local ChoiceArgs=() Path
         ChoiceArgs+=(-p "Please select a kernel source backup")
         ChoiceArgs+=("${KernelSourceBackupList[@]}")
@@ -194,16 +264,58 @@ GetTargetKernelSourceBackup(){
     return 0
 }
 
-GetCurrentKernelPath(){
-    tr " " "\n" < /proc/cmdline | awk -F "=" '{if($1 = "BOOT_IMAGE"){print $2"\n"; exit}}'
+Choice_KernelConfigBackup(){
+    local KernelConfigBackupList=()
+    readarray -t KernelConfigBackupList < <(GetKernelConfigBackupList)
+
+    if [[ -n "${1:-""}" ]]; then
+        if Array.Includes KernelConfigBackupList "$1"; then
+            Path="${1}"
+        fi
+    fi
+
+    if [[ -z "${Path-:""}" ]]; then
+        local ChoiceArgs=() Path
+        ChoiceArgs+=(-p "Please select a kernel config backup")
+        ChoiceArgs+=("${KernelConfigBackupList[@]}")
+        Path="$(Choice "${ChoiceArgs[@]}")"
+    fi
+
+    Path="${CONFIG_BACKUP_DIR%/}/${Path}.${ARCHIVE_FORMAT#"."}"
+
+    if [[ ! -e "${Path}" ]]; then
+        Msg.Err "Invalid kernel config"
+        return 1
+    fi
+    echo "$Path"
+    return 0
 }
 
-GetKernelSourceBackupList(){
-    FileList "${SOURCE_BACKUP_DIR}" | GetBaseName | grep -E "${ARCHIVE_FORMAT}$" | ForEach CutLastString "{}" "${ARCHIVE_FORMAT}" 
-}
+Choice_KernelBackup(){
+    local KernelBackupList=()
+    readarray -t KernelBackupList < <(GetKernelBackupList)
 
-GetKernelConfigBackupList(){
-    FileList "${CONFIG_BACKUP_DIR}" | GetBaseName
+    if [[ -n "${1:-""}" ]]; then
+        if Array.Includes KernelBackupList "$1"; then
+            Path="${1}"
+        fi
+    fi
+
+    if [[ -z "${Path:-""}" ]]; then
+        local ChoiceArgs=() Path
+        ChoiceArgs+=(-p "Please select a kernel backup")
+        ChoiceArgs+=("${KernelBackupList[@]}")
+        Path="$(Choice "${ChoiceArgs[@]}")"
+    fi
+
+    Path="${KERNEL_BACKUP_DIR%/}/${Path}"
+
+    if [[ ! -e "${Path}" ]]; then
+        Msg.Err "Invalid kernel backup"
+        return 1
+    fi
+    echo "$Path"
+    return 0
 }
 
 MakeTarBall(){
@@ -256,7 +368,7 @@ Command_List_Kernel(){
 Command_Build_Kernel(){
     RequireRootPermission || return 1
     local KernelSourcePath KernelSourceName
-    KernelSourcePath="$(GetTargetKernelSource "${1:-""}")" || return 1
+    KernelSourcePath="$(Choice_KernelSource "${1:-""}")" || return 1
     KernelSourceName="$(basename "$KernelSourcePath")"
     
     (
@@ -272,7 +384,7 @@ Command_Backup_Source(){
     RequireRootPermission || return 1
 
     local SelectedKernelSource
-    SelectedKernelSource="$(GetTargetKernelSource "${1:-""}")"
+    SelectedKernelSource="$(Choice_KernelSource "${1:-""}")"
     Msg.Info "Backing up the kernel source..."
 
     local TarBallPath
@@ -286,7 +398,7 @@ Command_Backup_Config(){
     RequireRootPermission || return 1
 
     local SelectedKernelSource
-    SelectedKernelSource="$(GetTargetKernelSource "${1:-""}")"
+    SelectedKernelSource="$(Choice_KernelSource "${1:-""}")"
     Msg.Info "Backing up the kernel config..."
 
     local ConfigPath
@@ -297,7 +409,26 @@ Command_Backup_Config(){
     return 0
 }
 
+Command_Backup_Kernel(){
+    RequireRootPermission || return 1
+
+    local SelectedKernel
+    SelectedKernel="$(basename "$(Choice_InstalledKernel "${1:-""}")" | sed "s|^vmlinuz-||g")"
+    Msg.Info "Backing up the kernel..."
+
+    local File BackupPath CurrentTime
+    CurrentTime="$(date +%s)"
+    while read -r File; do
+        BackupPath="${KERNEL_BACKUP_DIR%/}/linux-${SelectedKernel}-${CurrentTime}/$(basename "${File}")"
+        mkdir -p "$(dirname "${BackupPath}")"
+        cp "${File}" "${BackupPath}"
+        Msg.Info "Created kernel backup: ${BackupPath}"
+    done < <(GetKernelFilesToBackup "${SelectedKernel}")
+    return 0
+}
+
 #-- Backup list command --#
+
 # Command_Backup_List_Internal_Latest <Command to get backup file name list>
 Command_Backup_List_Internal_Latest(){
     local FileList=()
@@ -315,22 +446,13 @@ Command_Backup_List_Internal_All(){
         Date=$(GetLastSplitString "-" "${Line}")
         Kernel=$(CutLastString "${Line}" "-${Date}")
         echo "${Kernel} ($(date --date "@${Date}"))"
-    done < <("$@" | RemoveFileExt)
+    done < <("$@") | sort
 }
 
-
-Command_Backup_List_Source_All_Raw(){
-    GetKernelSourceBackupList
-}
-
-Command_Backup_List_Source_Latest(){
-    Command_Backup_List_Internal_Latest GetKernelSourceBackupList
-}
-
-Command_Backup_List_Source_All(){
-    Command_Backup_List_Internal_All GetKernelSourceBackupList
-}
-
+## Backup list  source 
+Command_Backup_List_Source_All_Raw(){ GetKernelSourceBackupList; }
+Command_Backup_List_Source_Latest(){ Command_Backup_List_Internal_Latest GetKernelSourceBackupList; }
+Command_Backup_List_Source_All(){ Command_Backup_List_Internal_All GetKernelSourceBackupList; }
 Command_Backup_List_Source(){
     if OptionEnabled_Latest; then
         if OptionEnabled_Raw; then
@@ -348,18 +470,10 @@ Command_Backup_List_Source(){
     fi
 }
 
-Command_Backup_List_Config_All_Raw(){
-    GetKernelConfigBackupList
-}
-
-Command_Backup_List_Config_Latest(){
-    Command_Backup_List_Internal_Latest GetKernelConfigBackupList
-}
-
-Command_Backup_List_Config_All(){
-    Command_Backup_List_Internal_All GetKernelConfigBackupList
-}
-
+## Backup list config
+Command_Backup_List_Config_All_Raw(){ GetKernelConfigBackupList; }
+Command_Backup_List_Config_Latest(){ Command_Backup_List_Internal_Latest GetKernelConfigBackupList; }
+Command_Backup_List_Config_All(){ Command_Backup_List_Internal_All GetKernelConfigBackupList; }
 Command_Backup_List_Config(){
     if OptionEnabled_Latest; then
         if OptionEnabled_Raw; then
@@ -377,17 +491,43 @@ Command_Backup_List_Config(){
     fi
 }
 
+# Backup list kernel
+Command_Backup_List_Kernel_All_Raw(){ GetKernelBackupList; }
+Command_Backup_List_Kernel_Latest(){ Command_Backup_List_Internal_Latest GetKernelBackupList; }
+Command_Backup_List_Kernel_All(){ Command_Backup_List_Internal_All GetKernelBackupList; }
+Command_Backup_List_Kernel(){
+    if OptionEnabled_Latest; then
+        if OptionEnabled_Raw; then
+            Command_Backup_List_Kernel_Latest_Raw # TODO: Implement
+        else
+            Command_Backup_List_Kernel_Latest
+        fi
+        return 0
+    fi
+
+    if OptionEnabled_Raw; then
+        Command_Backup_List_Kernel_All_Raw
+    else
+        Command_Backup_List_Kernel_All
+    fi
+}
+
 #-- Backup remove command --#
 Command_Backup_Remove_Source(){
     RequireRootPermission || return 1
-    GetTargetKernelSourceBackup "${1:-""}" | xargs rm -f
+    Choice_KernelSourceBackup "${1:-""}" | xargs rm -f
+}
+
+Command_Backup_Remove_Kernel(){
+    RequireRootPermission || return 1
+    Choice_KernelBackup "${1:-""}" | xargs rm -fr
 }
 
 #-- Menuconfig --#
 Command_MenuConfig(){
     RequireRootPermission || return 1
     local KernelSourcePath
-    KernelSourcePath="$(GetTargetKernelSource "${1:-""}")" || return 1
+    KernelSourcePath="$(Choice_KernelSource "${1:-""}")" || return 1
     (
         cd "$KernelSourcePath" || exit 1
         make menuconfig
@@ -457,6 +597,9 @@ case "${Command-:""}" in
     backup-config | bakc)
         Command_Backup_Config "$@"
         ;;
+    backup-kernel | bakk)
+        Command_Backup_Kernel "$@"
+        ;;
     # Backup List command
     backup-list-source | bakls)
         Command_Backup_List_Source "$@"
@@ -464,9 +607,15 @@ case "${Command-:""}" in
     backup-list-config | baklc)
         Command_Backup_List_Config "$@"
         ;;
+    backup-list-kernel | baklk)
+        Command_Backup_List_Kernel "$@"
+        ;;
     # Backup Remove command
     backup-remove-source | bakrs)
         Command_Backup_Remove_Source "$@"
+        ;;
+    backup-remove-kernel | bakrk)
+        Command_Backup_Remove_Kernel "$@"
         ;;
     # Menuconfig command
     menuconfig)
