@@ -675,8 +675,9 @@ case "${Command-:""}" in
         Command_UpdateGrub "$@"
         ;;
     *)
-        Msg.Err "Command exception error '${Command-""}'"
-        Msg.Err "Please report this error to the developer."
+        Msg.Err "No such command ( '${Command-""}' )"
+        Msg.Err "Please see help with 'help' command"
+        Msg.Err "If you think this is a bug, please report it to the developer."
         exit 1
         ;;
 esac
