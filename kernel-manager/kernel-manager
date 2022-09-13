@@ -299,8 +299,8 @@ Choice_KernelSourceBackup(){
     if [[ -z "${Path:-""}" ]]; then
         local ChoiceArgs=() Path
         ChoiceArgs+=(-p "Please select a kernel source backup")
-        ChoiceArgs+=("${KernelSourceBackupList[@]}")
-        Path="$(ChoiceLoop "${ChoiceArgs[@]}")"
+        ArrayAppend ChoiceArgs < <(PrintArray "${KernelSourceBackupList[@]}" | BackupFormatToString)
+        Path="$(ChoiceLoop "${ChoiceArgs[@]}" | BackupFormatFromString)"
     fi
 
     Path="${SOURCE_BACKUP_DIR%/}/${Path}.${ARCHIVE_FORMAT#"."}"
@@ -323,14 +323,14 @@ Choice_KernelConfigBackup(){
         fi
     fi
 
-    if [[ -z "${Path-:""}" ]]; then
+    if [[ -z "${Path:-""}" ]]; then
         local ChoiceArgs=() Path
         ChoiceArgs+=(-p "Please select a kernel config backup")
-        ChoiceArgs+=("${KernelConfigBackupList[@]}")
-        Path="$(ChoiceLoop "${ChoiceArgs[@]}")"
+        ArrayAppend ChoiceArgs < <(PrintArray "${KernelConfigBackupList[@]}" | BackupFormatToString)
+        Path="$(ChoiceLoop "${ChoiceArgs[@]}" | BackupFormatFromString)"
     fi
 
-    Path="${CONFIG_BACKUP_DIR%/}/${Path}.${ARCHIVE_FORMAT#"."}"
+    Path="${CONFIG_BACKUP_DIR%/}/${Path}.config"
 
     if [[ ! -e "${Path}" ]]; then
         Msg.Err "Invalid kernel config"
