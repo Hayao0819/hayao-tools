@@ -288,7 +288,7 @@ Choice_KernelSource(){
     return 0
 }
 
-Choice_KernelSourceBackup(){
+ChoiceBackup_KernelSource(){
     local KernelSourceBackupList=()
     readarray -t KernelSourceBackupList < <(GetKernelSourceBackupList)
 
@@ -315,7 +315,7 @@ Choice_KernelSourceBackup(){
     return 0
 }
 
-Choice_KernelConfigBackup(){
+ChoiceBackup_KernelConfig(){
     local KernelConfigBackupList=()
     readarray -t KernelConfigBackupList < <(GetKernelConfigBackupList)
 
@@ -342,7 +342,7 @@ Choice_KernelConfigBackup(){
     return 0
 }
 
-Choice_KernelBackup(){
+ChoiceBackup_Kernel(){
     local KernelBackupList=()
     readarray -t KernelBackupList < <(GetKernelBackupList)
 
@@ -561,17 +561,17 @@ Command_Backup_List_Kernel(){
 #-- Backup remove command --#
 Command_Backup_Remove_Source(){
     RequireRootPermission || return 1
-    Choice_KernelSourceBackup "${1:-""}" | xargs rm -f
+    ChoiceBackup_KernelSource "${1:-""}" | xargs rm -f
 }
 
 Command_Backup_Remove_Kernel(){
     RequireRootPermission || return 1
-    Choice_KernelBackup "${1:-""}" | xargs rm -fr
+    ChoiceBackup_Kernel "${1:-""}" | xargs rm -fr
 }
 
 Command_Backup_Remove_Config(){
     RequireRootPermission || return 1
-    Choice_KernelConfigBackup "${1:-""}" | xargs rm -f
+    ChoiceBackup_KernelConfig "${1:-""}" | xargs rm -f
 }
 
 #-- Menuconfig --#
