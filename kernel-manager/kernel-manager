@@ -626,70 +626,78 @@ Command_Call(){
     # メモ
     # ・関数内でexitしないこと
     # ・全ての関数に"$@"を渡すこと
-    case "${_Command}" in
-        # General command
-        help | "")
-            Command_General_Help "$@"
-            ;;
-        version)
-            Command_General_Version "$@"
-            ;;
-        # List command
-        list-source)
-            Command_List_Source "$@"
-            ;;
-        list-kernel)
-            Command_List_Kernel "$@"
-            ;;
-        # Build command
-        build-kernel)
-            Command_Build_Kernel "$@"
-            ;;
-        # Backup command
-        backup-source | baks)
-            Command_Backup_Source "$@"
-            ;;
-        backup-config | bakc)
-            Command_Backup_Config "$@"
-            ;;
-        backup-kernel | bakk)
-            Command_Backup_Kernel "$@"
-            ;;
-        # Backup List command
-        backup-list-source | bakls)
-            Command_Backup_List_Source "$@"
-            ;;
-        backup-list-config | baklc)
-            Command_Backup_List_Config "$@"
-            ;;
-        backup-list-kernel | baklk)
-            Command_Backup_List_Kernel "$@"
-            ;;
-        # Backup Remove command
-        backup-remove-source | bakrs)
-            Command_Backup_Remove_Source "$@"
-            ;;
-        backup-remove-kernel | bakrk)
-            Command_Backup_Remove_Kernel "$@"
-            ;;
-        backup-remove-config | bakrc)
-            Command_Backup_Remove_Config "$@"
-            ;;
-        # Menuconfig command
-        menuconfig)
-            Command_MenuConfig "$@"
-            ;;
-        # Update grub command
-        update-grub)
-            Command_UpdateGrub "$@"
-            ;;
-        *)
-            Msg.Err "No such command ( '${Command-""}' )"
-            Msg.Err "Please see help with 'help' command"
-            Msg.Err "If you think this is a bug, please report it to the developer."
-            exit 1
-            ;;
-    esac
+    {
+        case "${_Command}" in
+            # General command
+            help | "")
+                Command_General_Help "$@"
+                ;;
+            version)
+                Command_General_Version "$@"
+                ;;
+            # List command
+            list-source)
+                Command_List_Source "$@"
+                ;;
+            list-kernel)
+                Command_List_Kernel "$@"
+                ;;
+            # Build command
+            build-kernel)
+                Command_Build_Kernel "$@"
+                ;;
+            # Backup command
+            backup | bak)
+                Command_Backup "$@"
+                ;;
+            backup-source | baks)
+                Command_Backup_Source "$@"
+                ;;
+            backup-config | bakc)
+                Command_Backup_Config "$@"
+                ;;
+            backup-kernel | bakk)
+                Command_Backup_Kernel "$@"
+                ;;
+            # Backup List command
+            backup-list-source | bakls)
+                Command_Backup_List_Source "$@"
+                ;;
+            backup-list-config | baklc)
+                Command_Backup_List_Config "$@"
+                ;;
+            backup-list-kernel | baklk)
+                Command_Backup_List_Kernel "$@"
+                ;;
+            # Backup Remove command
+            backup-remove-source | bakrs)
+                Command_Backup_Remove_Source "$@"
+                ;;
+            backup-remove-kernel | bakrk)
+                Command_Backup_Remove_Kernel "$@"
+                ;;
+            backup-remove-config | bakrc)
+                Command_Backup_Remove_Config "$@"
+                ;;
+            # Menuconfig command
+            menuconfig)
+                Command_MenuConfig "$@"
+                ;;
+            # Update grub command
+            update-grub)
+                Command_UpdateGrub "$@"
+                ;;
+            *)
+                Msg.Err "No such command ( '${_Command-""}' )"
+                Msg.Err "Please see help with 'help' command"
+                Msg.Err "If you think this is a bug, please report it to the developer."
+                exit 1
+                ;;
+        esac
+    } || { 
+        Msg.Err "Failed to execute subcommand '$_Command'"
+        return 1
+    }
 }
 
 #-- Parse options --#
@@ -724,8 +732,5 @@ done
 
 Command="${1:-""}"
 shift 1 || true
-Command_Call "${Command}" "$@" || { 
-    Msg.Err "Failed to execute subcommand '$Command'"
-    exit 1
-}
+Command_Call "${Command}" "$@"
 
