@@ -177,6 +177,26 @@ GetKernelBackupList(){
     DirList "${KERNEL_BACKUP_DIR}" | GetBaseName
 }
 
+BackupFormatToString(){
+    local Line Kernel Date
+    while read -r Line; do
+        Date=$(GetLastSplitString "-" "${Line}")
+        Kernel=$(CutLastString "${Line}" "-${Date}")
+        echo "${Kernel} ($(date --date "@${Date}" "+%Y-%m-%d %H:%M:%S"))"
+    done | sort
+}
+
+BackupFormatFromString(){
+    local Line Kernel Date
+    while read -r Line; do
+        #echo "$Line"
+        Date=$(GetLastSplitString "(" "${Line}" | sed "s|)||g")
+        Kernel=$(CutLastString "${Line}" " (${Date})")
+        Date=$(date --date "${Date}" +%s)
+        echo "${Kernel}-${Date}"
+    done | sort
+}
+
 Choice_InstalledKernel(){
     local KernelList=()
     readarray -t KernelList < <(GetKernelFileList)
