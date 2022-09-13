@@ -213,7 +213,36 @@ Choice_InstalledKernel(){
         [[ -n "${CurrentKernelPath}" ]] && ChoiceArgs+=(-d "$CurrentKernelPath")
         ChoiceArgs+=(-p "Please select an installed kernel")
         ChoiceArgs+=("${KernelList[@]}")
-        Path="$(Choice "${ChoiceArgs[@]}")"
+        
+        Path="$(ChoiceLoop "${ChoiceArgs[@]}")"
+    fi
+    Path="/boot/$Path"
+
+    if [[ ! -e "${Path}" ]]; then
+        Msg.Err "Invalid kernel"
+        return 1
+    fi
+    echo "$Path"
+    return 0
+}
+
+Choice_Initramfs(){
+    local ImagelList=()
+    readarray -t ImagelList < <(GetInitramfsFileList)
+
+    if [[ -n "${1:-""}" ]]; then
+        if Array.Includes ImagelList "$1"; then
+            Path="$1"
+        fi
+    fi
+
+    if [[ -z "${Path:-""}" ]]; then
+        local ChoiceArgs=() CurrentInitramfs Path
+        CurrentInitramfs="initramfs-$(GetCurrentKernel).img"
+        [[ -e "${CurrentInitramfs}" ]] && ChoiceArgs+=(-d "$CurrentInitramfs")
+        ChoiceArgs+=(-p "Please select an initramfs")
+        ChoiceArgs+=("${ImagelList[@]}")
+        Path="$(ChoiceLoop "${ChoiceArgs[@]}")"
     fi
 
     Path="/boot/$Path"
