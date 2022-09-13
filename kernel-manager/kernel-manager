@@ -145,7 +145,7 @@ GetCurrentKernelPath(){
 }
 
 GetKernelFileList(){
-    FileList "/boot" | GetBaseName | grep -E "^vmlinuz-"
+    FileList "/boot" | GetBaseName | grep -E "^vmlinuz-" | sed -E "s/^vmlinuz-//"
 }
 
 GetInitramfsFileList(){
@@ -198,32 +198,33 @@ BackupFormatFromString(){
     done | sort
 }
 
+# 例: Choice_InstalledKernel 5.17.2-gentoo
 Choice_InstalledKernel(){
-    local KernelList=()
+    local KernelList=() Path Name
     readarray -t KernelList < <(GetKernelFileList)
 
     if [[ -n "${1:-""}" ]]; then
         if Array.Includes KernelList "$1"; then
-            Path="$1"
+            Name="$1"
         fi
     fi
 
-    if [[ -z "${Path:-""}" ]]; then
+    if [[ -z "${Name:-""}" ]]; then
         local ChoiceArgs=() CurrentKernelPath Path
-        CurrentKernelPath="vmlinuz-$(GetCurrentKernel)"
+        CurrentKernelPath="$(GetCurrentKernel)"
         [[ -n "${CurrentKernelPath}" ]] && ChoiceArgs+=(-d "$CurrentKernelPath")
         ChoiceArgs+=(-p "Please select an installed kernel")
         ChoiceArgs+=("${KernelList[@]}")
         
-        Path="$(ChoiceLoop "${ChoiceArgs[@]}")"
+        Name="$(ChoiceLoop "${ChoiceArgs[@]}")"
     fi
-    Path="/boot/$Path"
+    Path="/boot/vmlinuz-$Name"
 
     if [[ ! -e "${Path}" ]]; then
         Msg.Err "Invalid kernel"
         return 1
     fi
-    echo "$Path"
+    echo "$Name"
     return 0
 }
 
@@ -463,7 +464,7 @@ Command_Backup_Kernel(){
     RequireRootPermission || return 1
 
     local SelectedKernel
-    SelectedKernel="$(basename "$(Choice_InstalledKernel "${1:-""}")" | sed "s|^vmlinuz-||g")"
+    SelectedKernel="$(Choice_InstalledKernel "${1:-""}")"
     Msg.Info "Backing up the kernel..."
 
     local File BackupPath CurrentTime
