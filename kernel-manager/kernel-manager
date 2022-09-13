@@ -127,7 +127,7 @@ HelpDoc(){
 
 #-- Internal functions --#
 GetKernelSourceList(){
-    DirList "/usr/src" | GetBaseName | grep -E "^linux-" | sed -E "s/^linux-//"
+    DirList "/usr/src" | GetBaseName | grep -E "^linux-" | sed -E "s/^linux-//" | sort
 }
 
 GetCurrentKernel(){
