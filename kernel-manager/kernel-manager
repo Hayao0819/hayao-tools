@@ -288,7 +288,7 @@ Choice_KernelSource(){
 
     if [[ -z "${Name:-""}" ]]; then
         local ChoiceArgs=() CurrentKernelSource
-        CurrentKernelSource="$(GetCurrentKernelSource)"
+        CurrentKernelSource="$(GetCurrentKernel)"
         [[ -n "${CurrentKernelSource}" ]] && ChoiceArgs+=(-d "$CurrentKernelSource")
         ChoiceArgs+=(-p "Please select a kernel source")
         ChoiceArgs+=("${KernelSourceList[@]}")
