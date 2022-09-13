@@ -567,6 +567,11 @@ Command_Backup_Remove_Kernel(){
     Choice_KernelBackup "${1:-""}" | xargs rm -fr
 }
 
+Command_Backup_Remove_Config(){
+    RequireRootPermission || return 1
+    Choice_KernelConfigBackup "${1:-""}" | xargs rm -f
+}
+
 #-- Menuconfig --#
 Command_MenuConfig(){
     RequireRootPermission || return 1
@@ -665,6 +670,9 @@ case "${Command-:""}" in
         ;;
     backup-remove-kernel | bakrk)
         Command_Backup_Remove_Kernel "$@"
+        ;;
+    backup-remove-config | bakrc)
+        Command_Backup_Remove_Config "$@"
         ;;
     # Menuconfig command
     menuconfig)
