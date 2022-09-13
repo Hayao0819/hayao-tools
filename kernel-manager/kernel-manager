@@ -151,6 +151,10 @@ GetKernelFileList(){
     FileList "/boot" | GetBaseName | grep -E "^vmlinuz-"
 }
 
+GetInitramfsFileList(){
+    FileList "/boot" | GetBaseName | grep -E "^initramfs-"
+}
+
 # GetKernelFilesToBackup <kernel version>
 GetKernelFilesToBackup(){
     local kernel="${1-""}" 
