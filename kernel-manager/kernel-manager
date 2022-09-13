@@ -56,7 +56,7 @@ set -Eeuo pipefail
 
 # shellcheck source=/dev/null
 #source <(curl -sL "https://github.com/Hayao0819/FasBashLib/releases/download/v0.2.5.1/fasbashlib.sh")
-source <(curl -sL "https://raw.githubusercontent.com/Hayao0819/FasBashLib/85101302574a1fc48fa82cdb125f157f99b6fea6/fasbashlib.sh")
+source <(curl -sL "https://raw.githubusercontent.com/Hayao0819/FasBashLib/3c3e4629d18c9e6c4f4956a27962e86e3f4c1798/fasbashlib.sh")
 
 FileList(){
     find "$1" -mindepth 1 -maxdepth 1 -type f
@@ -224,7 +224,7 @@ Choice_KernelSource(){
         [[ -n "${CurrentKernelSource}" ]] && ChoiceArgs+=(-d "$CurrentKernelSource")
         ChoiceArgs+=(-p "Please select a kernel source")
         ChoiceArgs+=("${KernelSourceList[@]}")
-        Path="$(Choice "${ChoiceArgs[@]}")"
+        Path="$(ChoiceLoop "${ChoiceArgs[@]}")"
     fi
 
     Path="/usr/src/$Path"
@@ -251,7 +251,7 @@ Choice_KernelSourceBackup(){
         local ChoiceArgs=() Path
         ChoiceArgs+=(-p "Please select a kernel source backup")
         ChoiceArgs+=("${KernelSourceBackupList[@]}")
-        Path="$(Choice "${ChoiceArgs[@]}")"
+        Path="$(ChoiceLoop "${ChoiceArgs[@]}")"
     fi
 
     Path="${SOURCE_BACKUP_DIR%/}/${Path}.${ARCHIVE_FORMAT#"."}"
@@ -278,7 +278,7 @@ Choice_KernelConfigBackup(){
         local ChoiceArgs=() Path
         ChoiceArgs+=(-p "Please select a kernel config backup")
         ChoiceArgs+=("${KernelConfigBackupList[@]}")
-        Path="$(Choice "${ChoiceArgs[@]}")"
+        Path="$(ChoiceLoop "${ChoiceArgs[@]}")"
     fi
 
     Path="${CONFIG_BACKUP_DIR%/}/${Path}.${ARCHIVE_FORMAT#"."}"
@@ -305,7 +305,7 @@ Choice_KernelBackup(){
         local ChoiceArgs=() Path
         ChoiceArgs+=(-p "Please select a kernel backup")
         ChoiceArgs+=("${KernelBackupList[@]}")
-        Path="$(Choice "${ChoiceArgs[@]}")"
+        Path="$(ChoiceLoop "${ChoiceArgs[@]}")"
     fi
 
     Path="${KERNEL_BACKUP_DIR%/}/${Path}"
