@@ -592,10 +592,13 @@ Command_UpdateGrub(){
 
 #-- Command call --#
 Command_Call(){
+    local _Command="${1:-""}"
+    shift 1 || true
+
     # メモ
     # ・関数内でexitしないこと
     # ・全ての関数に"$@"を渡すこと
-    case "${Command-:""}" in
+    case "${_Command}" in
         # General command
         help | "")
             Command_General_Help "$@"
