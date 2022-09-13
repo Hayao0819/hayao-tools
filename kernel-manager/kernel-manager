@@ -490,12 +490,7 @@ Command_Backup_List_Internal_Latest(){
 }
 
 Command_Backup_List_Internal_All(){
-    local Line Kernel Date
-    while read -r Line; do
-        Date=$(GetLastSplitString "-" "${Line}")
-        Kernel=$(CutLastString "${Line}" "-${Date}")
-        echo "${Kernel} ($(date --date "@${Date}"))"
-    done < <("$@") | sort
+    BackupFormatToString < <("$@")
 }
 
 ## Backup list  source 
