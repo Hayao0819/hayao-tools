@@ -127,17 +127,31 @@ HelpDoc(){
 
 #-- Internal functions --#
 GetKernelSourceList(){
-    DirList "/usr/src" | GetBaseName | grep -E "^linux-"
+    DirList "/usr/src" | GetBaseName | grep -E "^linux-" | sed -E "s/^linux-//"
 }
 
 GetCurrentKernel(){
     uname -r
 }
 
+GetKernelPathFromVersion(){
+    echo "/boot/vmlinuz-${1}"
+}
 
+GetKernelSourcePathFromVersion(){
+    echo "/usr/src/linux-${1}"
+}
+
+GetKernelConfigPathFromVersion(){
+    echo "/boot/config-${1}"
+}
+
+GetKernelInitramfsPathFromVersion(){
+    echo "/boot/initramfs-${1}.img"
+}
 
 GetCurrentKernelSource(){
-    GetKernelSourceList | grep "$(GetCurrentKernel)"
+    GetKernelSourceList | grep "$(GetCurrentKernel)" | ForEach GetKernelSourcePathFromVersion "{}"
 }
 
 GetCurrentKernelPath(){
@@ -149,7 +163,7 @@ GetKernelFileList(){
 }
 
 GetInitramfsFileList(){
-    FileList "/boot" | GetBaseName | grep -E "^initramfs-"
+    FileList "/boot" | GetBaseName | grep -E "^initramfs-" | RemoveFileExt |  sed -E "s/^initramfs-//"
 }
 
 # GetKernelFilesToBackup <kernel version>
@@ -199,6 +213,7 @@ BackupFormatFromString(){
 }
 
 # 例: Choice_InstalledKernel 5.17.2-gentoo
+# 選択されたカーネルのバージョンを返します
 Choice_InstalledKernel(){
     local KernelList=() Path Name
     readarray -t KernelList < <(GetKernelFileList)
@@ -228,63 +243,65 @@ Choice_InstalledKernel(){
     return 0
 }
 
+# 例: Choice_InstalledKernelSource 5.17.2-gentoo
+# 選択されたInitramfsに対応するカーネルのバージョンを返します
 Choice_Initramfs(){
-    local ImagelList=()
+    local ImagelList=() Path Name
     readarray -t ImagelList < <(GetInitramfsFileList)
 
     if [[ -n "${1:-""}" ]]; then
         if Array.Includes ImagelList "$1"; then
-            Path="$1"
+            Name="$1"
         fi
     fi
 
-    if [[ -z "${Path:-""}" ]]; then
-        local ChoiceArgs=() CurrentInitramfs Path
-        CurrentInitramfs="initramfs-$(GetCurrentKernel).img"
+    if [[ -z "${Name:-""}" ]]; then
+        local ChoiceArgs=() CurrentInitramfs
+        CurrentInitramfs="$(GetCurrentKernel)"
         [[ -e "${CurrentInitramfs}" ]] && ChoiceArgs+=(-d "$CurrentInitramfs")
         ChoiceArgs+=(-p "Please select an initramfs")
         ChoiceArgs+=("${ImagelList[@]}")
-        Path="$(ChoiceLoop "${ChoiceArgs[@]}")"
+        Name="$(ChoiceLoop "${ChoiceArgs[@]}")"
     fi
 
-    Path="/boot/$Path"
+    Path="/boot/initramfs-${Name}.img"
 
     if [[ ! -e "${Path}" ]]; then
         Msg.Err "Invalid kernel"
         return 1
     fi
-    echo "$Path"
+    echo "$Name"
     return 0
 }
 
 
-# カーネルソースのディレクトリのフルパスを返します
+# 指定されたカーネルソースに対応するカーネルのバージョンを返します
 Choice_KernelSource(){
-    local KernelSourceList=()
+    local KernelSourceList=() Path Name
     readarray -t KernelSourceList < <(GetKernelSourceList)
 
     if [[ -n "${1:-""}" ]]; then
         if Array.Includes KernelSourceList "$1"; then
-            Path="$1"
+            Name="$1"
         fi
     fi
 
-    if [[ -z "${Path:-""}" ]]; then
-        local ChoiceArgs=() CurrentKernelSource Path
+    if [[ -z "${Name:-""}" ]]; then
+        local ChoiceArgs=() CurrentKernelSource
         CurrentKernelSource="$(GetCurrentKernelSource)"
         [[ -n "${CurrentKernelSource}" ]] && ChoiceArgs+=(-d "$CurrentKernelSource")
         ChoiceArgs+=(-p "Please select a kernel source")
         ChoiceArgs+=("${KernelSourceList[@]}")
-        Path="$(ChoiceLoop "${ChoiceArgs[@]}")"
+        Name="$(ChoiceLoop "${ChoiceArgs[@]}")"
     fi
 
-    Path="/usr/src/$Path"
+    Path="/usr/src/linux-$Name"
 
     if [[ ! -e "${Path}" ]]; then
         Msg.Err "Invalid kernel source"
         return 1
     fi
-    echo "$Path"
+    echo "$Name"
     return 0
 }
 
@@ -418,29 +435,39 @@ Command_List_Kernel(){
 #-- Build command --#
 Command_Build_Kernel(){
     RequireRootPermission || return 1
-    local KernelSourcePath KernelSourceName
-    KernelSourcePath="$(Choice_KernelSource "${1:-""}")" || return 1
-    KernelSourceName="$(basename "$KernelSourcePath")"
+    local KernelSourceVersion KernelSourcePath
+    KernelSourceVersion="$(Choice_KernelSource "${1:-""}")" || return 1
+    KernelSourcePath="$(GetKernelSourcePathFromVersion "$KernelSourceVersion")"
     
     (
-        Msg.Info "Building kernel: $KernelSourceName"
+        Msg.Info "Building kernel: $KernelSourceVersion"
         Msg.Info "Directory: $KernelSourcePath"
         cd "$KernelSourcePath" || exit 1
         make -j "$(nproc)"
-    ) || Msg.Err "Failed to build kernel: $KernelSourceName"
+    ) || Msg.Err "Failed to build kernel: $KernelSourceVersion"
 }
 
 #-- Backup command --#
+#Command_Backup(){
+#    RequireRootPermission || return 1
+#
+#    local SelectedKernel
+#    SelectedKernel="$(GetKernelSourcePathFromVersion "${1:-""}")"
+#    #Command_Call backup-source "$SelectedKernel"
+#    Command_Call backup-config "$SelectedKernel"
+#    Command_Call backup-kernel "$SelectedKernel"
+#}
+
 Command_Backup_Source(){
     RequireRootPermission || return 1
 
-    local SelectedKernelSource
-    SelectedKernelSource="$(Choice_KernelSource "${1:-""}")"
+    local SelectedKernelVersion
+    SelectedKernelVersion="$(Choice_KernelSource "${1:-""}")"
     Msg.Info "Backing up the kernel source..."
 
     local TarBallPath
-    TarBallPath="${SOURCE_BACKUP_DIR}/$(basename "${SelectedKernelSource}")-$(date +%s).tar.gz"
-    MakeTarBall "${SelectedKernelSource}" "${TarBallPath}"
+    TarBallPath="${SOURCE_BACKUP_DIR}/${SelectedKernelVersion}-$(date +%s).tar.gz"
+    MakeTarBall "$(GetKernelSourcePathFromVersion "${SelectedKernelVersion}")" "${TarBallPath}"
     Msg.Info "Created kernel source backup: ${TarBallPath}"
     return 0
 }
@@ -448,14 +475,14 @@ Command_Backup_Source(){
 Command_Backup_Config(){
     RequireRootPermission || return 1
 
-    local SelectedKernelSource
-    SelectedKernelSource="$(Choice_KernelSource "${1:-""}")"
+    local SelectedKernelVersion
+    SelectedKernelVersion="$(Choice_KernelSource "${1:-""}")"
     Msg.Info "Backing up the kernel config..."
 
     local ConfigPath
-    ConfigPath="${CONFIG_BACKUP_DIR}/$(basename "${SelectedKernelSource}")-$(date +%s).config"
+    ConfigPath="${CONFIG_BACKUP_DIR}/${SelectedKernelVersion}-$(date +%s).config"
     mkdir -p "$(dirname "${ConfigPath}")"
-    cp "${SelectedKernelSource}/.config" "${ConfigPath}"
+    cp "$(GetKernelSourcePathFromVersion "$SelectedKernelVersion")/.config" "${ConfigPath}" 
     Msg.Info "Created kernel config backup: ${ConfigPath}"
     return 0
 }
@@ -578,7 +605,7 @@ Command_Backup_Remove_Config(){
 Command_MenuConfig(){
     RequireRootPermission || return 1
     local KernelSourcePath
-    KernelSourcePath="$(Choice_KernelSource "${1:-""}")" || return 1
+    KernelSourcePath="$(GetKernelSourcePathFromVersion "$(Choice_KernelSource "${1:-""}")")" || return 1
     (
         cd "$KernelSourcePath" || exit 1
         make menuconfig
