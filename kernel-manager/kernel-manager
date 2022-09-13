@@ -448,15 +448,17 @@ Command_Build_Kernel(){
 }
 
 #-- Backup command --#
-#Command_Backup(){
-#    RequireRootPermission || return 1
-#
-#    local SelectedKernel
-#    SelectedKernel="$(GetKernelSourcePathFromVersion "${1:-""}")"
-#    #Command_Call backup-source "$SelectedKernel"
-#    Command_Call backup-config "$SelectedKernel"
-#    Command_Call backup-kernel "$SelectedKernel"
-#}
+Command_Backup(){
+    RequireRootPermission || return 1
+
+    local SelectedKernel
+    SelectedKernel="$(Choice_KernelSource "${1:-""}")"
+    Msg.Info "Selected kernel: $SelectedKernel"
+    #Command_Call backup-source "$SelectedKernel"
+    Command_Call backup-config "$SelectedKernel"
+    Command_Call backup-kernel "$SelectedKernel"
+}
+
 
 Command_Backup_Source(){
     RequireRootPermission || return 1
