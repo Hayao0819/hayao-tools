@@ -144,7 +144,7 @@ GetKernelSourcePathFromVersion(){
 
 GetKernelConfigPathFromVersion(){
     #echo "/boot/config-${1}"
-    echo $(GetKernelSourcePathFromVersion "${1}")/.config
+    echo "$(GetKernelSourcePathFromVersion "${1}")/.config"
 }
 
 GetKernelInitramfsPathFromVersion(){
