@@ -36,7 +36,7 @@ PRODUCT_VERSION="20220909"
 BACKUP_DIR="/etc/kernel-manager/backup/"
 SOURCE_BACKUP_DIR="${BACKUP_DIR%/}/source/"
 KERNEL_BACKUP_DIR="${BACKUP_DIR%/}/kernel/"
-INITRAMFS_BACKUP_DIR="${BACKUP_DIR%/}/initramfs/"
+#INITRAMFS_BACKUP_DIR="${BACKUP_DIR%/}/initramfs/"
 CONFIG_BACKUP_DIR="${BACKUP_DIR%/}/config/"
 ARCHIVE_FORMAT=".tar.gz"
 KERNEL_FILES=(
@@ -143,11 +143,32 @@ GetKernelSourcePathFromVersion(){
 }
 
 GetKernelConfigPathFromVersion(){
-    echo "/boot/config-${1}"
+    #echo "/boot/config-${1}"
+    echo $(GetKernelSourcePathFromVersion "${1}")/.config
 }
 
 GetKernelInitramfsPathFromVersion(){
     echo "/boot/initramfs-${1}.img"
+}
+
+GetLatestKernelConfigBackupPath(){
+#    local path="${CONFIG_BACKUP_DIR%/}/${1}.config"
+    local LatestConfig
+    LatestConfig="$(ListCommand_Options_Latest=true Command_Call backup-list-config | grep "${1}-")"
+    [[ -z "${LatestConfig}" ]] && return 1
+    echo "${CONFIG_BACKUP_DIR%/}/${LatestConfig}.config"
+}
+
+GetLatestKernelBackupPath(){
+    local LatestKernel
+    LatestKernel="$(ListCommand_Options_Latest=true Command_Call backup-list-kernel | grep "${1}-")"
+    [[ -z "${LatestKernel}" ]] && return 1
+    echo "${KERNEL_BACKUP_DIR%/}/${LatestKernel}/"
+}
+
+# ファイルに差異があれば正常終了します
+Compare2Diff(){
+    diff -q "$1" "$2" > /dev/null
 }
 
 GetCurrentKernelSource(){
@@ -477,14 +498,34 @@ Command_Backup_Source(){
 Command_Backup_Config(){
     RequireRootPermission || return 1
 
+    # ターゲット選択
     local SelectedKernelVersion
     SelectedKernelVersion="$(Choice_KernelSource "${1:-""}")"
-    Msg.Info "Backing up the kernel config..."
 
+    # バックアップの必要性を確認
+    local CurrentKernelConfigPath LatestKernelConfigBackupPath
+    CurrentKernelConfigPath="$(GetKernelConfigPathFromVersion "${SelectedKernelVersion}")"
+    LatestKernelConfigBackupPath="$(GetLatestKernelConfigBackupPath "${SelectedKernelVersion}")"
+    if ! [[ -e "$CurrentKernelConfigPath" ]]; then
+        Msg.Err "Kernel config not found: $CurrentKernelConfigPath"
+        return 1
+    fi
+    if [[ -n "${LatestKernelConfigBackupPath:-""}" ]]; then
+        if Compare2Diff "$CurrentKernelConfigPath" "$LatestKernelConfigBackupPath" ; then
+            Msg.Info "The kernel config is already backed up"
+            return 0
+        fi
+    fi
+
+    Msg.Info "Backing up the kernel config..."
     local ConfigPath
     ConfigPath="${CONFIG_BACKUP_DIR}/${SelectedKernelVersion}-$(date +%s).config"
     mkdir -p "$(dirname "${ConfigPath}")"
-    cp "$(GetKernelSourcePathFromVersion "$SelectedKernelVersion")/.config" "${ConfigPath}" 
+    cp "${CurrentKernelConfigPath}" "${ConfigPath}" || {
+        Msg.Err "Failed to backup kernel config"
+        return 1
+    }
+    
     Msg.Info "Created kernel config backup: ${ConfigPath}"
     return 0
 }
@@ -492,10 +533,29 @@ Command_Backup_Config(){
 Command_Backup_Kernel(){
     RequireRootPermission || return 1
 
+    # ターゲット選択
     local SelectedKernel
     SelectedKernel="$(Choice_InstalledKernel "${1:-""}")"
-    Msg.Info "Backing up the kernel..."
 
+    # バックアップの必要性を確認
+    local LatestKernelBackupPath RunBackup=false
+    LatestKernelBackupPath="$(GetLatestKernelBackupPath "${SelectedKernel}")"
+    while read -r File; do
+        BackupPath="${LatestKernelBackupPath}/$(basename "${File}")"
+        if [[ -e "${BackupPath}" ]] && Compare2Diff "${File}" "${BackupPath}"; then
+                Msg.Info "The kernel file is already backed up: ${File}"
+        else
+            RunBackup=true
+            break
+        fi
+    done < <(GetKernelFilesToBackup "${SelectedKernel}")
+
+    if ! Bool "$RunBackup"; then
+        Msg.Info "The kernel is already backed up"
+        return 0
+    fi
+
+    Msg.Info "Backing up the kernel..."
     local File BackupPath CurrentTime
     CurrentTime="$(date +%s)"
     while read -r File; do
@@ -517,7 +577,7 @@ Command_Backup_List_Internal_Latest(){
     # shellcheck disable=SC2016
     while read -r Kernel; do
         Array.Print "${FileList[@]}" | grep "${Kernel}-" | sort -n | tail -n 1
-    done < <(Array.ForEach FileList eval 'CutLastString "{}" "-$(GetLastSplitString "-" "{}")"' | uniq)
+    done < <(Array.ForEach FileList eval 'CutLastString "{}" "-$(GetLastSplitString "-" "{}")"' | sort | uniq)
 }
 
 Command_Backup_List_Internal_All(){
@@ -734,5 +794,6 @@ done
 
 Command="${1:-""}"
 shift 1 || true
+
 Command_Call "${Command}" "$@"
 
