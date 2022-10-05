@@ -29,7 +29,7 @@ libre_translate_check(){
     return 0
 }
 libre_translate_detect(){
-    libre_translate_check || return 1
+    libre_translate_check || return 2
     __libre_translate_return="$(curl -s "${LIBRETRANSLATE_URL}/detect" -X POST -d "q=${1:-""}&api_key=${LIBRETRANSLATE_APIKEY:-""}")"
     if [ "$(echo "${__libre_translate_return}" | jq -r '.[].error')" = "null" ]; then
         echo "${__libre_translate_return}" | jq -r '.[].language'
@@ -40,13 +40,13 @@ libre_translate_detect(){
     fi
 }
 libre_translate_languages(){
-    libre_translate_check || return 1
+    libre_translate_check || return 2
     curl -s "${LIBRETRANSLATE_URL}/languages" | jq -r '.[].code'
 }
 
 # libre_translate_translate <text> <source language> <target language>
 libre_translate_translate(){
-    libre_translate_check || return 1
+    libre_translate_check || return 2
     __libre_translate_return="$(curl -s "$LIBRETRANSLATE_URL/translate" -X POST -d "q=${1:-""}&source=${2:-""}&target=${3:-""}&api_key=${LIBRETRANSLATE_APIKEY:-""}")"
     if [ "$(echo "${__libre_translate_return}" | jq -r '.error')" = "null" ]; then
         echo "${__libre_translate_return}" | jq -r '.translatedText'
@@ -59,8 +59,7 @@ libre_translate_translate(){
 
 # libre_translate_translate <text> <target language>
 libre_translate_translate_auto(){
-    libre_translate_check || return 1
+    libre_translate_check || return 2
     libre_translate_translate "${1:-""}" "$(libre_translate_detect "${1:-""}")" "${2:-""}"
 }
-libre_translate_detect
-#libre_translate_translate "こんにちは" ja en
+

@@ -23,11 +23,15 @@ libre_translate_translate "Translate text on your shell!" en fr # Result: Tradui
 
 ## Usage
 
+All functions perform an environment check before execution.
+
+If a required command or environment variable is not set, an error message and exit code `2` will be returned.
+
 ### libre_translate_detect <Text>
 
 Detect the language of a single text.
 
-If error, returns an error message with an exit code of 1.
+If error, returns an error message with an exit code `1`.
 
 ### libre_translate_languages
 
@@ -37,10 +41,10 @@ Retrieve list of supported languages
 
 Translate text from a language to another
 
-If error, returns an error message with an exit code of 1.
+If error, returns an error message with an exit code `1`.
 
 ### libre_translate_translate_auto <Text> <Target Lang>
 
 Automatically detect and translate the language of the source.
 
-If error, returns an error message with an exit code of 1.
+If error, returns an error message with an exit code `1`.
