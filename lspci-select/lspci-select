@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+declare -a lspci_devicelist=()
+readarray -t lspci_devicelist < <(lspci)
+readarray -t choice_list < <(printf "%s\n" "${lspci_devicelist[@]}" | cut -d " " -f 2-)
+PS3="Select a device: "; select selected_device in "${choice_list[@]}"; do
+    [[ -n "${selected_device}" ]] && selected_device="$REPLY" && break
+done
+lspci -v -s "$(cut -d " " -f 1 <<< "${lspci_devicelist["$(( selected_device - 1 ))"]}")" | sed "$ d"
