@@ -1,105 +1,85 @@
 #!/usr/bin/env bash
 
-CaptureSpecialKeys(){
-    local SELECTION rest
+SelectMenu(){
+    local CaptureSpecialKeys Choices=("$@") CurrentChoice=0 Key=""
 
-    IFS= read -r -n1 -s SELECTION
-    #echo "$SELECTION" | hexdump >&2
-    if [[ $SELECTION == $'\x1b' ]]; then
-        read -r -n2 -s rest
-        SELECTION+="$rest"
-    else
-        if [[ "$SELECTION" == '' ]] ;then
-            echo "Enter"
-            return 0
+    CaptureSpecialKeys(){
+        local SELECTION rest
+        IFS= read -r -n1 -s SELECTION
+        #echo "$SELECTION" | hexdump >&2
+        if [[ $SELECTION == $'\x1b' ]]; then
+            read -r -n2 -s rest
+            SELECTION+="$rest"
         else
-            read -r rest
-            echo "$SELECTION$rest"
-            return 0
-        fi
-    fi
-
-    case $SELECTION in
-        $'\x1b\x5b\x41') #up arrow
-            echo "Up"
-            ;;
-        $'\x1b\x5b\x42') #down arrow
-            echo "Down"
-            ;;
-        $'\x1b\x5b\x43') #right arrow
-            echo "Right"
-            ;;
-        $'\x1b\x5b\x44') #left arrow
-            echo "Left"
-            ;;
-        $'\x20') #space
-            echo "Space"
-            ;;
-    esac
-}
-
-ClearLine(){ printf "\033[2K"; }
-MoveCursorUp(){ printf "\033[%dA" "$1"; }
-ResetStyle(){ printf "\033[0m"; }
-ClearUpperLines(){
-    # shellcheck disable=SC2034
-    for i in $(seq 1 "$1"); do
-        MoveCursorUp 1
-        ClearLine
-    done
-}
-
-TextUnderLine(){ printf "\033[4m" ; }
-TextBold(){ printf "\033[1m" ; }
-
-#----- ここから処理 -----
-
-# デバイスリストを取得
-declare -a LspciDeviceList=()
-readarray -t LspciDeviceList < <(lspci)
-
-readarray -t Choices  < <(printf "%s\n" "${LspciDeviceList[@]}" | cut -d " " -f 2-)
-
-CurrentChoice=0
-Key=""
-
-ShowMenu(){
-    for i in "${!Choices[@]}"; do
-        if [[ "$i" = "$CurrentChoice" ]]; then
-            TextUnderLine
-            TextBold
-            echo " > $i: ${Choices[$i]}"
-        else
-            echo "   $i: ${Choices[$i]}"
-        fi
-        ResetStyle
-    done
-}
-
-UpdateMenuScreen(){
-    ClearUpperLines "${#Choices[@]}"
-    ShowMenu
-}
-
-ShowMenu
-
-while [[ "$Key" != "Enter" ]]; do
-    Key="$(CaptureSpecialKeys)"
-    case "$Key" in
-        Up)
-            if (( "$CurrentChoice" != 0 )); then
-                CurrentChoice=$((CurrentChoice - 1))
-                UpdateMenuScreen
+            if [[ "$SELECTION" == '' ]] ;then
+                echo "Enter"
+                return 0
+            else
+                read -r rest
+                echo "$SELECTION$rest"
+                return 0
             fi
-            ;;
-        Down)
-            if (( "$CurrentChoice" != "${#Choices[@]}" - 1 )); then
-                CurrentChoice=$((CurrentChoice + 1))
-                UpdateMenuScreen
+        fi
+
+        case $SELECTION in
+            $'\x1b\x5b\x41') #up arrow
+                echo "Up"
+                ;;
+            $'\x1b\x5b\x42') #down arrow
+                echo "Down"
+                ;;
+            $'\x1b\x5b\x43') #right arrow
+                echo "Right"
+                ;;
+            $'\x1b\x5b\x44') #left arrow
+                echo "Left"
+                ;;
+            $'\x20') #space
+                echo "Space"
+                ;;
+        esac
+    }
+
+    #-- ここからメニュー
+    while [[ "$Key" != "Enter" ]]; do
+        # メニューを表示
+        for i in "${!Choices[@]}"; do
+            if [[ "$i" = "$CurrentChoice" ]]; then
+                printf "\033[4m" && printf "\033[1m" # 太字+下線
+                echo " > $i: ${Choices[$i]}"
+            else
+                echo "   $i: ${Choices[$i]}"
             fi
-            ;;
-    esac
-done 
+            printf "\033[0m" # リセット
+        done
 
-lspci -v -s "$(cut -d " " -f 1 <<< "${Choices[$CurrentChoice]}")" | sed "$ d"
+        # キー検知
+        Key="$(CaptureSpecialKeys)"
+        case "$Key" in
+            Up)
+                (( "$CurrentChoice" != 0 )) && CurrentChoice=$((CurrentChoice - 1))
+                ;;
+            Down)
+                (( "$CurrentChoice" != "${#Choices[@]}" - 1 )) && CurrentChoice=$((CurrentChoice + 1))
+                ;;
+        esac
 
+        # メニューを削除
+        # shellcheck disable=SC2034
+        for i in $(seq 1 "${#Choices[@]}"); do
+            printf "\033[1A"
+            printf "\033[2K"
+        done 
+    done 
+
+    echo "${Choices[$CurrentChoice]}"
+}
+
+
+declare -a lspci_devicelist=()
+readarray -t lspci_devicelist < <(lspci)
+readarray -t choice_list < <(printf "%s\n" "${lspci_devicelist[@]}" | cut -d " " -f 2-)
+selected_device="$(SelectMenu "${choice_list[@]}")"
+
+# Todo: 選択されたデバイスからIDを抽出して、lspci -v -s で表示する処理を実装する
+lspci -v -s "$(cut -d " " -f 1 <<< "${lspci_devicelist["$(( selected_device - 1 ))"]}")" | sed "$ d"
