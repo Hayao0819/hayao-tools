@@ -7,7 +7,7 @@ work_dir="$current_dir/work"
 build_dir="$work_dir/src"
 pacman_repo="https://gitlab.archlinux.org/pacman/pacman.git"
 
-pacman_build_depends=(meson doxygen libarchive-dev cmake pkg-config libcrypto++-dev libcurl4-openssl-dev libgpgme-dev libssl-dev asciidoc-base libarchive-tools)
+pacman_build_depends=(meson doxygen fakeroot libarchive-dev cmake pkg-config libcrypto++-dev libcurl4-openssl-dev libgpgme-dev libssl-dev asciidoc-base libarchive-tools)
 destdir="/"
 
 uninstall=false
