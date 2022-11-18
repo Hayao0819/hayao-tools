@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+
+# shellcheck source=/dev/null
+source <(curl -sL "https://github.com/Hayao0819/FasBashLib/releases/download/v0.2.7.1/fasbashlib-snake.sh")
+
+original_url="$1"
+original_domain="$(url.host <<< "$original_url")"
+new_domain="$2"
+sed -E "s/$original_domain/$new_domain/g" <<< "$original_url"
