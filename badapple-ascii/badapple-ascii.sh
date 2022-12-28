@@ -34,7 +34,7 @@ read -r
 # Play ascii arts
 trap 'printf "\33c\e[3J"' EXIT ERR INT TERM
 while read -r f; do
-    printf '\33c\e[3J'
+    printf "\033[%d;%dH" "1" "1"
     cat "$TMP_DIR/txt/$f"
     sleep "$WAIT_TIME"
 done < <(find "$TMP_DIR/txt" -type f -print0 | xargs -0 basename | sort -n)
