@@ -6,6 +6,7 @@ current_dir="$(cd "$(dirname "$0")" || exit 1; pwd)"
 work_dir="$current_dir/work"
 build_dir="$work_dir/src"
 pacman_repo="https://gitlab.archlinux.org/pacman/pacman.git"
+checkout_branch=""
 
 pacman_build_depends=(meson doxygen fakeroot libarchive-dev cmake pkg-config libcrypto++-dev libcurl4-openssl-dev libgpgme-dev libssl-dev asciidoc-base libarchive-tools)
 destdir="/"
@@ -14,6 +15,8 @@ uninstall=false
 
 if [[ "${1-""}" = "uninstall"  ]]; then
     uninstall=true
+else
+    checkout_branch="${1:-"master"}"
 fi
 
 # config for pacman.conf
@@ -117,7 +120,7 @@ make_envconf(){
     esac
 }
 make_prepare(){
-    mkdir -p "$build_dir"
+    mkdir -p "$build_dir/build"
 
     if [[ -n "$(ls "$build_dir" 2> /dev/null)" ]]; then
         (
@@ -127,6 +130,7 @@ make_prepare(){
     else
         git clone "$pacman_repo" "$build_dir"
     fi
+    git -C "$build_dir" checkout "$checkout_branch"
 }
 
 make_build(){
