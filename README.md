@@ -1,7 +1,5 @@
-# Hayao Tools
+## Hayao Tools
 
-ハヤオが書いた個人用ツール
+Personalized tools created by Hayao
 
-未完成のものも多くあるので、あくまで個人用です
-
-ライセンスは各ファイルのコメントを参照してください
+Please refer to README in each directory for license and usage.
