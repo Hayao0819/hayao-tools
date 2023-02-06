@@ -1,0 +1,16 @@
+{
+    "filename": "cellar",
+    "headers": [
+        "header.sh"
+    ],
+    "functions": [
+        "../build/fsblib.sh",
+        "main.sh"
+    ],
+    "remote-functions": [],
+    "remote-inserts":{},
+    "footers": [
+        "footer.sh"
+    ],
+    "entrypoint": "main"
+}
