@@ -1,9 +1,6 @@
 package main
 import "strings"
 
-func rmTopChr(cnt int, text string)(string){ 
-	return string([]rune(text)[cnt:])
-}
 
 func containsStr(array []string, target string) bool {
     for _, item := range array {
@@ -14,10 +11,14 @@ func containsStr(array []string, target string) bool {
     return false
 }
 
-func longReqArg(arg string)(bool){
+func isReqArg(arg string)(bool){
 	return strings.HasSuffix(arg, ":")
 }
 
 func isLongOpt(arg string)(bool){
 	return strings.HasPrefix(arg, "--")
+}
+
+func removeHyphenFromLongOpt(arg string)(string){
+	return strings.TrimPrefix(arg, "--")
 }
