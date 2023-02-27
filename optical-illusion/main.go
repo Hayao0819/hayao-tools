@@ -2,12 +2,14 @@ package main
 
 import (
 	"fmt"
+	"os"
+	"strconv"
 )
 
 
 var Size int =20
-var Width int =Size
-var Height int = Size
+var Width int
+var Height int
 
 var (
 	HidariUe="┏"
@@ -70,6 +72,19 @@ func lastLine(){
 
 
 func main(){
+
+	if len(os.Args) >1{
+		var err error
+		Size, err =strconv.Atoi(os.Args[1])
+		if err !=nil{
+			fmt.Fprintln(os.Stderr, err)
+			os.Exit(1)
+		}
+	}
+
+	Width=Size
+	Height=Size
+
 	firstLine()
 	middleLine()
 	lastLine()
