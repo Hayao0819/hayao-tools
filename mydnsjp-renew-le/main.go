@@ -15,7 +15,8 @@ func main(){
 
 func run() error{
 	funcs := []func() error{
-		parse_args,
+		parse_mode,
+		parse_domains,
 		get_env,
 		check_env,
 		make_req,

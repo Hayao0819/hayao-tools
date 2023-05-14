@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"fmt"
+	"os"
 	"strings"
 
 	//"log"
@@ -13,11 +14,58 @@ import (
 	//"strings"
 
 	"github.com/caarlos0/env"
+	"github.com/spf13/pflag"
 )
 
-func parse_args() error{
-	current_mode = simulation
+/*
+	--dry-run
+	--delete
+	--regist
+*/
 
+func parse_mode() error{
+	args_dry_run := pflag.BoolP("dry-run", "x", false, "Show post data and url without send request.")
+	args_delete := pflag.BoolP("delete", "d",  false, "Execute delete mode.")
+	args_regist := pflag.BoolP("regist", "r", false, "Execute regist mode.")
+	args_help := pflag.BoolP("help", "h", false, "Show help.")
+
+	pflag.Parse()
+
+	if *args_dry_run {
+		current_mode = simulation
+	}else if *args_delete {
+		current_mode = delete
+	}else if *args_regist {
+		current_mode = regist
+	}else if *args_help {
+		pflag.Usage()
+		os.Exit(0)
+	}else{
+		return errors.New("mode is none")
+	}
+
+	return nil
+}
+
+// ドメインをパース
+// 構文: "ID:PASSWORD:DOMAIN"
+func parse_domains () error{
+	for _, arg := range pflag.Args() {
+		arg_slice := strings.Split(arg, ":")
+		if len(arg_slice) != 3 {
+			return errors.New("domain parse error")
+		}
+
+		id 	:= arg_slice[0]
+		pass 	:= arg_slice[1]
+		domain  := arg_slice[2]
+
+		if environ.Domain == domain{
+			mydnsjp.Id = id
+			mydnsjp.Pass = pass
+		}
+		
+	}
 	return nil
 }
 

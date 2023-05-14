@@ -12,6 +12,11 @@ var environ = struct {
 	//AuthOutput string `env:"CERTBOT_AUTH_OUTPUT"`
 }{}
 
+var mydnsjp = struct {
+	Id string
+	Pass string
+}{}
+
 type mode int
 
 const (
