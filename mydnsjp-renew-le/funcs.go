@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/base64"
 	"errors"
 	"log"
 	"os"
@@ -123,7 +124,11 @@ func make_req() error{
 	request.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 
 	// Auth
-	request.SetBasicAuth(mydnsjp.Id, mydnsjp.Pass)
+	//request.SetBasicAuth(mydnsjp.Id, mydnsjp.Pass)
+
+	// Auth
+	base64_id_pass := base64.StdEncoding.EncodeToString([]byte(mydnsjp.Id + ":" + mydnsjp.Pass))
+	request.Header.Add("Authorization", "Basic " + base64_id_pass)
 
 	if current_mode == simulation{
 		log.Println(values.Encode())
