@@ -26,6 +26,19 @@ const (
 	simulation
 )
 
+func (m *mode)String()string{
+	switch *m {
+	case regist:
+		return "regist"
+	case delete:
+		return "delete"
+	case simulation:
+		return "simulation"
+	default:
+		return "none"
+	}
+}
+
 var current_mode mode = none
 
 var request *http.Request = nil

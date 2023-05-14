@@ -2,7 +2,7 @@ package main
 
 import (
 	"errors"
-	"fmt"
+	"log"
 	"os"
 	"strings"
 
@@ -44,6 +44,8 @@ func parse_mode() error{
 		return errors.New("mode is none")
 	}
 
+	log.Println("mode: " + current_mode.String())
+
 	return nil
 }
 
@@ -61,6 +63,7 @@ func parse_domains () error{
 		domain  := arg_slice[2]
 
 		if environ.Domain == domain{
+			log.Println("domain: " + domain)
 			mydnsjp.Id = id
 			mydnsjp.Pass = pass
 		}
@@ -116,10 +119,14 @@ func make_req() error{
 		return err
 	}
 
+	// Header
 	request.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 
+	// Auth
+	request.SetBasicAuth(mydnsjp.Id, mydnsjp.Pass)
+
 	if current_mode == simulation{
-		fmt.Println(values.Encode())
+		log.Println(values.Encode())
 	}
 
 	return nil
@@ -127,8 +134,8 @@ func make_req() error{
 
 func send_req() error{
 	if current_mode == simulation {
-		fmt.Println(request.Header)
-		fmt.Println(request.URL.String())
+		log.Println(request.Header)
+		log.Println(request.URL.String())
 		return nil
 	}
 
@@ -138,6 +145,8 @@ func send_req() error{
 		return err
 	}
 	defer resp.Body.Close()
+
+	log.Println(resp.Status)
 
 	return nil
 }
