@@ -60,10 +60,6 @@ parse_template(){
     sed "${_sed_args[@]}"
 }
 
-stdin_echo(){
-    xargs echo -e
-}
-
 scirpt_usage(){
     cat << "EOF"
 Generate m3u8 playlist from Mirakurun API
@@ -77,8 +73,6 @@ Options:
     -h | --help       Show this help message.
 EOF
 }
-
-
 
 #-- Entry point --#
 main(){
@@ -126,7 +120,6 @@ main(){
     _prepare_json(){
         mk_api_services_json="$(get_json "$mk_api_services")"
     }
-
 
     _generate_playlist(){
         echo "Generating playlist to $pl_path ..."
