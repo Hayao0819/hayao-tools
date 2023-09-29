@@ -13,7 +13,7 @@ mk_api_services="/api/services"
 # %CH_NAME%: チャンネル名
 # %MK_IP%: Miraurun IP
 pl_m3u8_header="#EXTM3U\n#EXTVLCOPT:network-caching=1000"
-pl_m3u8_content="#EXTINF:-1,%CH_TYPE_JP% - %CH_NAME%\nhttp://%MK_IP%/api/channels/%CH_TYPE%/%CH%/services/%SERVICE%/stream/"
+pl_m3u8_content="#EXTINF:-1,%CH_TYPE_JP% - %CH_NAME%\nhttp://%MK_IP%:%MK_PORT%/api/channels/%CH_TYPE%/%CH%/services/%SERVICE%/stream/"
 
 
 #-- Script config --#
@@ -154,6 +154,7 @@ main(){
             while read -r json_per_ch; do
                 echo -e "$(parse_template \
                     MK_IP="$mk_ip" \
+                    MK_PORT="$mk_port" \
                     CH="$(get_from_json json_per_ch ".channel.channel")" \
                     SERVICE="$(get_from_json json_per_ch ".serviceId")" \
                     CH_TYPE="$(get_from_json json_per_ch ".channel.type")" \
