@@ -20,6 +20,7 @@ pl_m3u8_content="#EXTINF:-1,%CH_TYPE_JP% - %CH_NAME%\nhttp://%MK_IP%/api/channel
 set -e -u -E -o pipefail
 
 #-- Set up global vars --#
+: "${ch_filter:="false"}"
 : "${pl_path:="./tv_playlist.m3u8"}"
 : "${mk_ip:="localhost"}"
 : "${mk_port:="40772"}"
@@ -70,6 +71,7 @@ Options:
     -i | --ip IP      Specify mirakurun IP address  (DEFAULT=localhost)
     -p | --port PORT  Specify mirakurun port (DEFAULT=40772)
     -l | --list FILE  Specify the path of the playlist to ganarate
+    -f | --filter     Exclude same channels
     -h | --help       Show this help message.
 EOF
 }
@@ -103,6 +105,10 @@ main(){
                     hasarg "${2-""}" && mk_ip="$2"
                     shift 2
                     ;;
+                "-f" | "--filter")
+                    ch_filter=true
+                    shift 1
+                    ;;
                 "-h" | "--help")
                     scirpt_usage
                     exit 0
@@ -119,6 +125,25 @@ main(){
 
     _prepare_json(){
         mk_api_services_json="$(get_json "$mk_api_services")"
+    }
+
+    _filter_json(){
+        local channel_list=() ch
+        readarray -t channel_list < <(get_from_json mk_api_services_json -c ".[].channel.channel" | sort -n | uniq)
+
+        _make_filtered_json(){
+            {
+                printf "["
+                for ch in "${channel_list[@]}"; do
+                    get_from_json mk_api_services_json -rc ".[] | select(.channel.channel == \"$ch\")" | head -n 1
+                    printf ","
+                done
+                printf "]"
+            } | sed "s/,]$/]/g"
+        }
+
+        
+        mk_api_services_json="$(_make_filtered_json | jq "sort_by(.remoteControlKeyId)")"
     }
 
     _generate_playlist(){
@@ -141,6 +166,7 @@ main(){
 
     _parse_args "$@"
     _prepare_json
+    "${ch_filter}" && _filter_json
     _generate_playlist
 }
 
