@@ -19,6 +19,9 @@ bash ./mirakurun-playlist.sh -h
 
 # プレイリストを作成
 bash ./mirakurun-playlist.sh <IP アドレス>
+
+# 自分の場合
+bash ./mirakurun-playlist.sh -f 192.168.0.10 -l /mnt/c/Users/hayao/Desktop/tv.m3u8
 ```
 
 
