@@ -1,0 +1,12 @@
+{
+	"authors": [
+		"山田ハヤオ"
+	],
+	"copyright": "Copyright © 2024, 山田ハヤオ",
+	"dependencies": {
+		"commandr": "~>1.0.0"
+	},
+	"description": "A minimal D application.",
+	"license": "MIT",
+	"name": "dlang-todo"
+}
