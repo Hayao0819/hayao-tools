@@ -1,5 +1,7 @@
 github.com/Hayao0819/nahi v0.0.2-0.20240508023329-a38bef6b5581 h1:GnuJvj8NXNq2J18eGqe6+R6hje41PaYhJOnJj8q60CY=
 github.com/Hayao0819/nahi v0.0.2-0.20240508023329-a38bef6b5581/go.mod h1:6y4OH/3jDW6HX3L2LoaE+GvNlqAzUG0hrpba9U1b2XA=
+github.com/Hayao0819/nahi v0.0.2-0.20240513024050-3484b85dccd2 h1:P7V6v+XkzghmPobN4acVNVI9G1LTSbwkJniwBKeT9us=
+github.com/Hayao0819/nahi v0.0.2-0.20240513024050-3484b85dccd2/go.mod h1:6y4OH/3jDW6HX3L2LoaE+GvNlqAzUG0hrpba9U1b2XA=
 github.com/chzyer/logex v1.1.10 h1:Swpa1K6QvQznwJRcfTfQJmTE72DqScAa40E+fbHEXEE=
 github.com/chzyer/logex v1.1.10/go.mod h1:+Ywpsq7O8HXn0nuIou7OrIPyXbp3wmkHB+jjWRnGsAI=
 github.com/chzyer/readline v0.0.0-20180603132655-2972be24d48e h1:fY5BOSpyZCqRo5OhCuC+XN+r/bBCmeuuJtjz+bCNIf8=

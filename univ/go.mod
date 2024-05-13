@@ -3,7 +3,7 @@ module github.com/Hayao0819/Hayao-Tools/univ
 go 1.22.3
 
 require (
-	github.com/Hayao0819/nahi v0.0.2-0.20240508023329-a38bef6b5581
+	github.com/Hayao0819/nahi v0.0.2-0.20240513024050-3484b85dccd2
 	github.com/manifoldco/promptui v0.9.0
 	github.com/spf13/cobra v1.8.0
 )
