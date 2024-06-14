@@ -1,0 +1,31 @@
+{
+    "manifest_version": 3,
+    "name": "ニコニコRe:仮 リダイレクトツール",
+    "version": "1.0.0",
+    "description": "ニコニコのリンクをRe:仮にリダイレクトします",
+    "author": "shun819.mail@gmail.com",
+    "permissions": ["tabs"],
+    "icons": {
+        "128": "assets/icon-128.png"
+    },
+    "web_accessible_resources": [
+        {
+            "resources": ["assets/*"],
+            "matches": ["<all_urls>"]
+        }
+    ],
+    "action": {
+        "default_title": "ニコニコRe:仮 リダイレクト"
+    },
+    "background": {
+        "service_worker": "background.js",
+        "type": "module"
+    },
+    "content_scripts": [
+        {
+            "matches": ["*://*.nicovideo.jp/watch/*" ],
+            "js": ["niconico.js"]
+
+        }
+    ]
+}
