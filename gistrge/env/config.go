@@ -1,9 +1,6 @@
 package env
 
 import (
-	"fmt"
-
-	"github.com/Hayao0819/Hayao-Tools/gistrge/utils"
 	"github.com/cockroachdb/errors"
 	"github.com/spf13/viper"
 )
@@ -42,8 +39,6 @@ func Load() error {
 	if err := vp.Unmarshal(globalConfig); err != nil {
 		return errors.Wrap(err, "failed to unmarshal config")
 	}
-
-	fmt.Println(utils.JSON(globalConfig))
 
 	return nil
 }
