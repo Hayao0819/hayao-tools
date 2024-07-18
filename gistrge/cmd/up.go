@@ -6,9 +6,13 @@ import (
 	"encoding/base64"
 	"log/slog"
 
+	"github.com/Hayao0819/Hayao-Tools/gistrge/env"
+	"github.com/Hayao0819/Hayao-Tools/gistrge/gist"
 	"github.com/Hayao0819/Hayao-Tools/gistrge/mobra"
 	"github.com/Hayao0819/nahi/futils"
+	"github.com/google/go-github/v63/github"
 	"github.com/mholt/archiver/v4"
+	"github.com/pkg/errors"
 	"github.com/samber/lo"
 	"github.com/spf13/cobra"
 )
@@ -16,6 +20,8 @@ import (
 func UpCmd() *cobra.Command {
 
 	paths := []string{}
+	description := ""
+
 	cmd := mobra.New("up").
 		Short("Upload a file to GitHub Gist").
 		PreRunE(func(cmd *cobra.Command, args []string) error {
@@ -56,11 +62,27 @@ func UpCmd() *cobra.Command {
 			slog.Info("Uploading...")
 			slog.Debug("Uploading...", "size", len(encoded))
 
-			// TODO: Implement upload process
+			client := gist.GetClient()
+			filename := env.Config().GistFileName
+			_, _, err = client.Gists.Create(context.TODO(), &github.Gist{
+				Description: github.String("Gistrge: " + description),
+				Public:      github.Bool(false),
+				Files: map[github.GistFilename]github.GistFile{
+					github.GistFilename(filename): {
+						Filename: github.String(filename),
+						Content:  github.String(encoded),
+					},
+				},
+			})
+			if err != nil {
+				return errors.Wrap(err, "failed to create gist")
+			}
 
 			return nil
 		}).
 		Cobra()
+
+	cmd.Flags().StringVarP(&description, "description", "d", "", "Description of the Gist")
 
 	return cmd
 }
