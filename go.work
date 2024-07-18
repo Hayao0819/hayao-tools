@@ -2,5 +2,8 @@ go 1.22.4
 
 use (
 	./gistrge
+	./golang-parseargs-demo
+	./mydnsjp-renew-le
+	./optical-illusion
 	./univ
 )
