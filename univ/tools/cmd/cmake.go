@@ -20,5 +20,5 @@ func cmakeCmd() *cobra.Command {
 }
 
 func init() {
-	cobrautils.RegisterSubCmd(cmakeCmd())
+	cobrautils.AddSubCmds(cmakeCmd())
 }

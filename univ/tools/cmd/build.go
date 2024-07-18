@@ -36,5 +36,5 @@ func buildCmd() *cobra.Command {
 }
 
 func init() {
-	cobrautils.RegisterSubCmd(buildCmd())
+	cobrautils.AddSubCmds(buildCmd())
 }
