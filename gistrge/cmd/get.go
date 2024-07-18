@@ -4,7 +4,7 @@ import (
 	"errors"
 
 	"github.com/Hayao0819/Hayao-Tools/gistrge/gistrge"
-	"github.com/Hayao0819/nahi/mobra"
+	"github.com/Hayao0819/Hayao-Tools/gistrge/mobra"
 	"github.com/spf13/cobra"
 )
 

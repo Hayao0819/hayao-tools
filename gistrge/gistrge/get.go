@@ -33,7 +33,7 @@ func GetGistrges(userId string) ([]*Gistrge, error) {
 }
 
 func GetFileURL(g *Gistrge) string {
-	return gist.GetFileURL(g.Gist, env.GistFileName)
+	return gist.GetFileURL(g.Gist, env.Config().GistFileName)
 }
 
 func GetContent(g *Gistrge) (string, error) {

@@ -3,6 +3,7 @@ package gist
 import (
 	"context"
 
+	"github.com/cockroachdb/errors"
 	"github.com/google/go-github/v63/github"
 )
 
@@ -12,14 +13,14 @@ func GetAll(userID string) ([]*github.Gist, error) {
 	if userID == "" {
 		user, err := GetMe()
 		if err != nil {
-			return nil, err
+			return nil, errors.Wrap(err, "failed to get user")
 		}
 		userID = user.GetLogin()
 	}
 
 	list, _, err := client.Gists.List(context.TODO(), userID, nil)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "failed to list gists")
 	}
 
 	return list, nil

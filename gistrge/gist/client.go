@@ -6,6 +6,5 @@ import (
 )
 
 func GetClient() *github.Client {
-	return github.NewClient(nil).WithAuthToken(env.GitHubToken)
+	return github.NewClient(nil).WithAuthToken(env.Config().GitHubToken)
 }
-

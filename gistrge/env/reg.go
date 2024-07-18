@@ -6,7 +6,10 @@ var descriptionRegExp *regexp.Regexp
 
 func initDescriptionRegExp() error {
 	var err error
-	descriptionRegExp, err = regexp.Compile(DescriptionRegExpStr)
+
+	config := Config()
+
+	descriptionRegExp, err = regexp.Compile(config.DescriptionRegExpStr)
 	return err
 }
 

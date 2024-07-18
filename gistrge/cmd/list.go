@@ -2,7 +2,8 @@ package cmd
 
 import (
 	"github.com/Hayao0819/Hayao-Tools/gistrge/gistrge"
-	"github.com/Hayao0819/nahi/mobra"
+	"github.com/Hayao0819/Hayao-Tools/gistrge/mobra"
+	"github.com/pkg/errors"
 	"github.com/samber/lo"
 	"github.com/spf13/cobra"
 )
@@ -16,7 +17,7 @@ func ListCmd() *cobra.Command {
 		RunE(func(cmd *cobra.Command, args []string) error {
 			gists, err := gistrge.GetGistrges(user)
 			if err != nil {
-				return err
+				return errors.Wrap(err, "failed to get gistrges list")
 			}
 
 			output := lo.Map(gists, func(item *gistrge.Gistrge, index int) string {
