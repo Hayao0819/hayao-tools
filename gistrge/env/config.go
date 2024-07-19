@@ -1,6 +1,7 @@
 package env
 
 import (
+	"github.com/Hayao0819/Hayao-Tools/gistrge/utils"
 	"github.com/cockroachdb/errors"
 	"github.com/spf13/viper"
 )
@@ -35,6 +36,7 @@ func Load() error {
 		}
 	}
 
+	// Viperの値をglobalConfigにコピー
 	globalConfig = Default()
 	if err := vp.Unmarshal(globalConfig); err != nil {
 		return errors.Wrap(err, "failed to unmarshal config")
@@ -51,6 +53,11 @@ func init() {
 	vp.SetConfigType("json")
 
 	vp.AddConfigPath(".")
+
+	// Load default values
+	for _, t := range utils.GetTags(*Default(), "mapstructure") {
+		vp.BindEnv(t)
+	}
 
 	// Environment Variables
 	vp.SetEnvPrefix("GISTRGE")
