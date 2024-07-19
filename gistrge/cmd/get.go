@@ -1,8 +1,6 @@
 package cmd
 
 import (
-	"encoding/base64"
-
 	"github.com/Hayao0819/Hayao-Tools/gistrge/gistrge"
 	"github.com/Hayao0819/Hayao-Tools/gistrge/mobra"
 	"github.com/cockroachdb/errors"
@@ -32,7 +30,7 @@ func GetCmd() *cobra.Command {
 			}
 
 			// Find target gist
-			found, err := gistrge.Find(gists, target)
+			found, err := gists.Find(target)
 			if err != nil {
 				return errors.Wrap(err, "failed to find")
 			}
@@ -42,27 +40,21 @@ func GetCmd() *cobra.Command {
 
 			// Output URL
 			if onlyUrl {
-				cmd.Println(gistrge.GetFileURL(found))
+				cmd.Println(found.GetFileURL())
 				return nil
-			}
-
-			// Get content
-			content, err := gistrge.GetContent(found)
-			if err != nil {
-				return err
 			}
 
 			// Output raw content
 			if rawContent {
+				content, err := found.GetContent()
+				if err != nil {
+					return err
+				}
 				cmd.Println(content)
 				return nil
 			}
 
 			// Decode base64 and extract tarball
-			_, err = base64.StdEncoding.DecodeString(content)
-			if err != nil {
-				return errors.Wrap(err, "failed to decode base64")
-			}
 
 			return nil
 
