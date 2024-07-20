@@ -5,4 +5,4 @@ current_path="$(
     pwd
 )"
 cd "$current_path" || exit 1
-go build -o out/gistrge .
+go build -o out/gistrge -ldflags="-s -w" .
