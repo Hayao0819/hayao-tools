@@ -1,8 +1,11 @@
 package cmd
 
 import (
+	"encoding/json"
+
 	"github.com/Hayao0819/Hayao-Tools/gistrge/gistrge"
 	"github.com/Hayao0819/Hayao-Tools/gistrge/mobra"
+	"github.com/Hayao0819/Hayao-Tools/gistrge/utils"
 	"github.com/cockroachdb/errors"
 	"github.com/spf13/cobra"
 )
@@ -12,6 +15,7 @@ func GetCmd() *cobra.Command {
 	user := ""
 	onlyUrl := false
 	rawContent := false
+	rawJSON := false
 
 	cmd := mobra.
 		New("get").
@@ -35,26 +39,46 @@ func GetCmd() *cobra.Command {
 				return errors.Wrap(err, "failed to find")
 			}
 			if found == nil {
-				return errors.New("not found")
+				return errors.New("Specified gist not found")
 			}
 
 			// Output URL
 			if onlyUrl {
-				cmd.Println(found.GetFileURL())
+				cmd.Println(found.GetFileURLFromGist())
 				return nil
 			}
 
 			// Output raw content
-			if rawContent {
-				content, err := found.GetContent()
+			if rawContent || rawJSON {
+				data, err := found.GetUploadData()
 				if err != nil {
 					return err
 				}
-				cmd.Println(content)
+				if rawContent {
+					cmd.Println(data.Data)
+				} else if rawJSON {
+					json, err := json.Marshal(data)
+					if err != nil {
+						return err
+					}
+					cmd.Println(string(json))
+				}
+
 				return nil
 			}
 
 			// Decode base64 and extract tarball
+			decoded, err := found.DecodeFile()
+			if err != nil {
+				return err
+			}
+
+			// Extract tarball
+
+			_, err = utils.ExtractBytes(decoded)
+			if err != nil {
+				return err
+			}
 
 			return nil
 
@@ -63,6 +87,7 @@ func GetCmd() *cobra.Command {
 	cmd.Flags().StringVarP(&user, "user", "u", "", "GitHub user name")
 	cmd.Flags().BoolVarP(&onlyUrl, "onlyurl", "o", false, "Output only URL")
 	cmd.Flags().BoolVarP(&rawContent, "raw", "r", false, "Output raw content")
+	cmd.Flags().BoolVarP(&rawJSON, "json", "j", false, "Output raw json")
 
 	return cmd
 }

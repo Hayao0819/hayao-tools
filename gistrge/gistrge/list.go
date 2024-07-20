@@ -4,7 +4,7 @@ type GistrgeList []*Gistrge
 
 func (list GistrgeList) Find(target string) (*Gistrge, error) {
 	for _, item := range list {
-		if *item.Gist.ID == target {
+		if *item.gist.ID == target {
 			return item, nil
 		}
 

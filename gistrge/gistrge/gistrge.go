@@ -14,8 +14,14 @@ import (
 )
 
 type Gistrge struct {
-	Gist        *github.Gist
+	gist        *github.Gist
 	Description string
+	uploadData  *UploadData
+	//content     string
+}
+
+type UploadData struct {
+	Data string `json:"data"`
 }
 
 func (g *Gistrge) IsCorrect() (bool, error) {
@@ -24,7 +30,7 @@ func (g *Gistrge) IsCorrect() (bool, error) {
 		return false, err
 	}
 
-	desc := g.Gist.GetDescription()
+	desc := g.gist.GetDescription()
 
 	if len(strings.TrimSpace(desc)) < 1 {
 		return false, nil
@@ -32,30 +38,38 @@ func (g *Gistrge) IsCorrect() (bool, error) {
 	return reg.MatchString(desc), nil
 }
 
-func (g *Gistrge) GetDescription() (string, error) {
+func (g *Gistrge) GetDescriptionFromGist() (string, error) {
 	reg, err := env.UseDescriptionRegExp()
 	if err != nil {
 		return "", err
 	}
 
-	return reg.ReplaceAllString(g.Gist.GetDescription(), ""), nil
+	return reg.ReplaceAllString(g.gist.GetDescription(), ""), nil
 }
 
-func (g *Gistrge) Create() error {
+func (g *Gistrge) CreateNewGist() error {
 	client := gist.GetClient()
-	_, _, err := client.Gists.Create(context.TODO(), g.Gist)
+	_, _, err := client.Gists.Create(context.TODO(), g.gist)
 	if err != nil {
 		return errors.Wrap(err, "failed to create gist")
 	}
 	return nil
 }
 
-func (g *Gistrge) GetFileURL() string {
-	return gist.GetFileURL(g.Gist, env.Config().GistFileName)
+func (g *Gistrge) GetFileURLFromGist() (string, error) {
+
+	if g.gist.ID == nil {
+		return "", errors.New("gist id is nil")
+	}
+
+	return gist.GetFileURL(g.gist, env.Config().GistFileName)
 }
 
-func (g *Gistrge) GetContent() (string, error) {
-	url := g.GetFileURL()
+func (g *Gistrge) FetchContentFromGist() (string, error) {
+	url, err := g.GetFileURLFromGist()
+	if err != nil {
+		return "", err
+	}
 	resp, err := http.Get(url)
 	if err != nil {
 		return "", err
@@ -66,18 +80,27 @@ func (g *Gistrge) GetContent() (string, error) {
 	if err != nil {
 		return "", err
 	}
+
 	return string(body), nil
 }
 
-func (g *Gistrge) Decode() ([]byte, error) {
-	content, err := g.GetContent()
+func (g *Gistrge) GetUploadData() (*UploadData, error) {
+	if g.uploadData == nil {
+		return nil, errors.New("upload data is nil")
+	}
+	return g.uploadData, nil
+}
+
+func (g *Gistrge) DecodeFile() ([]byte, error) {
+
+	uploadData, err := g.GetUploadData()
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to get content")
+		return nil, err
 	}
 
-	decoded, err := base64.StdEncoding.DecodeString(content)
+	decoded, err := base64.StdEncoding.DecodeString(uploadData.Data)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to decode base64")
+		return nil, err
 	}
 	return decoded, nil
 }

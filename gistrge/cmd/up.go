@@ -46,7 +46,7 @@ func UpCmd() *cobra.Command {
 
 			slog.Info("Uploading...")
 
-			if err := newGistrge.Create(); err != nil {
+			if err := newGistrge.CreateNewGist(); err != nil {
 				return errors.Wrap(err, "failed to create gist")
 			}
 

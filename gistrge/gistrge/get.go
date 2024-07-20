@@ -13,7 +13,7 @@ func GetGistrges(userId string) (GistrgeList, error) {
 	}
 
 	filtered := lo.FilterMap(gists, func(item *github.Gist, index int) (*Gistrge, bool) {
-		gistre, err := New(item)
+		gistre, err := FromFetchedGist(item)
 		if err != nil {
 			return nil, false
 		}
