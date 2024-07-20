@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/base64"
 	"encoding/json"
+	"log/slog"
 
 	"github.com/Hayao0819/Hayao-Tools/gistrge/env"
 	"github.com/Hayao0819/Hayao-Tools/gistrge/gist"
@@ -15,6 +16,7 @@ import (
 
 func NewUploadData(path ...string) (*UploadData, error) {
 	files, err := archiver.FilesFromDisk(nil, lo.Associate(path, func(item string) (string, string) {
+		slog.Info("Adding file to archive", "item", item)
 		return item, item
 	}))
 	if err != nil {

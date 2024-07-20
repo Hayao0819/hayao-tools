@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/cockroachdb/errors"
 	"github.com/mholt/archiver/v4"
 )
 
@@ -26,8 +27,16 @@ func ExtractBytes(data []byte, dest string) (any, error) {
 	//fmt.Printf("%+v\n", format)
 	errs := []error{}
 	if ex, ok := format.(archiver.CompressedArchive); ok {
-		ex.Extract(context.Background(), reader, nil, func(ctx context.Context, f archiver.File) error {
+		err := ex.Extract(context.Background(), reader, nil, func(ctx context.Context, f archiver.File) error {
 			slog.Debug("Extracting\n", "file", f.NameInArchive, "dest", dest)
+
+			if f.IsDir() {
+				return nil
+			}
+
+			if err := os.MkdirAll(filepath.Join(dest, filepath.Dir(f.NameInArchive)), 0755); err != nil {
+				errs = append(errs, err)
+			}
 
 			vfile, err := f.Open()
 			if err != nil {
@@ -45,6 +54,7 @@ func ExtractBytes(data []byte, dest string) (any, error) {
 			if err != nil {
 				errs = append(errs, err)
 			}
+			defer destFile.Close()
 
 			if err := destFile.Chmod(f.Mode()); err != nil {
 				errs = append(errs, err)
@@ -56,6 +66,13 @@ func ExtractBytes(data []byte, dest string) (any, error) {
 
 			return nil
 		})
+
+		if err != nil {
+			errs = append(errs, err)
+		}
+	}
+	if len(errs) > 0 {
+		return nil, errors.Join(errs...)
 	}
 
 	return nil, nil

@@ -12,6 +12,8 @@ import (
 
 func GetCmd() *cobra.Command {
 	target := ""
+	dest := ""
+
 	user := ""
 	onlyUrl := false
 	rawContent := false
@@ -23,6 +25,11 @@ func GetCmd() *cobra.Command {
 			target = args[0]
 			if target == "" {
 				return errors.New("target is required")
+			}
+
+			dest = args[1]
+			if dest == "" {
+				return errors.New("destination is required")
 			}
 			return nil
 		}).
@@ -75,7 +82,7 @@ func GetCmd() *cobra.Command {
 
 			// Extract tarball
 
-			_, err = utils.ExtractBytes(decoded, ".")
+			_, err = utils.ExtractBytes(decoded, dest)
 			if err != nil {
 				return err
 			}
