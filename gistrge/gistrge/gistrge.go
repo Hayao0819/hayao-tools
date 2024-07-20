@@ -10,7 +10,7 @@ import (
 	"github.com/Hayao0819/Hayao-Tools/gistrge/env"
 	"github.com/Hayao0819/Hayao-Tools/gistrge/gist"
 	"github.com/google/go-github/v63/github"
-	"github.com/pkg/errors"
+	"github.com/cockroachdb/errors"
 )
 
 type Gistrge struct {

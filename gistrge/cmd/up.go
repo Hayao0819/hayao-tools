@@ -7,7 +7,7 @@ import (
 	"github.com/Hayao0819/Hayao-Tools/gistrge/gistrge"
 	"github.com/Hayao0819/Hayao-Tools/gistrge/mobra"
 	"github.com/Hayao0819/nahi/futils"
-	"github.com/pkg/errors"
+	"github.com/cockroachdb/errors"
 	"github.com/samber/lo"
 	"github.com/spf13/cobra"
 )
