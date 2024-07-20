@@ -75,7 +75,7 @@ func GetCmd() *cobra.Command {
 
 			// Extract tarball
 
-			_, err = utils.ExtractBytes(decoded)
+			_, err = utils.ExtractBytes(decoded, ".")
 			if err != nil {
 				return err
 			}

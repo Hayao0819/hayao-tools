@@ -29,7 +29,7 @@ func NewUploadData(path ...string) (*UploadData, error) {
 	// Create tarball
 	var tarball []byte
 	var tarballIo = bytes.NewBuffer(tarball)
-	if err = format.Archive(context.TODO(), tarballIo, files); err != nil {
+	if err = format.Archive(context.Background(), tarballIo, files); err != nil {
 		return nil, err
 	}
 
@@ -66,7 +66,7 @@ func FromFetchedGist(gist *github.Gist) (*Gistrge, error) {
 
 	// Set upload data
 	content, err := g.FetchContentFromGist() // uploadData is still nil
-	
+
 	if err != nil {
 		return nil, err
 	}

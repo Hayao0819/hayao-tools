@@ -8,6 +8,6 @@ import (
 
 func GetMe() (*github.User, error) {
 	client := GetClient()
-	user, _, err := client.Users.Get(context.TODO(), "")
+	user, _, err := client.Users.Get(context.Background(), "")
 	return user, err
 }

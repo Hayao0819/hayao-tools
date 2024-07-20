@@ -49,7 +49,7 @@ func (g *Gistrge) GetDescriptionFromGist() (string, error) {
 
 func (g *Gistrge) CreateNewGist() error {
 	client := gist.GetClient()
-	_, _, err := client.Gists.Create(context.TODO(), g.gist)
+	_, _, err := client.Gists.Create(context.Background(), g.gist)
 	if err != nil {
 		return errors.Wrap(err, "failed to create gist")
 	}

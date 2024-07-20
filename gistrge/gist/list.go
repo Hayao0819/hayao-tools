@@ -18,7 +18,7 @@ func GetAll(userID string) ([]*github.Gist, error) {
 		userID = user.GetLogin()
 	}
 
-	list, _, err := client.Gists.List(context.TODO(), userID, nil)
+	list, _, err := client.Gists.List(context.Background(), userID, nil)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to list gists")
 	}
