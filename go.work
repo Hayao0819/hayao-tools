@@ -2,6 +2,7 @@ go 1.22.4
 
 use (
 	./gistrge
+	./go-and-v/v-calls-go/go
 	./golang-parseargs-demo
 	./mydnsjp-renew-le
 	./optical-illusion
