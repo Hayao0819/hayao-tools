@@ -1,4 +1,4 @@
-go 1.22.4
+go 1.23.0
 
 use (
 	./gistrge
@@ -6,5 +6,6 @@ use (
 	./golang-parseargs-demo
 	./mydnsjp-renew-le
 	./optical-illusion
+	./slog-sample
 	./univ
 )
