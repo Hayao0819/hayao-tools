@@ -1,0 +1,13 @@
+# Base style is Google
+BasedOnStyle: Google
+
+# Force pointers to the type for C++
+DerivePointerAlignment: false
+PointerAlignment: Left
+
+# No column limit
+ColumnLimit: 0
+
+# Indent 4 spaces
+IndentWidth: 4
+AccessModifierOffset: -4
