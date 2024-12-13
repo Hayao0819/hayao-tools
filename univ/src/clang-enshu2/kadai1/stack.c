@@ -1,9 +1,10 @@
 #include <ctype.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-int debug = 1;
+bool debug = true;
 
 struct cell {
     double item;
@@ -12,7 +13,7 @@ struct cell {
 
 struct cell* stk;
 
-int empty_stack() {
+bool is_empty_stack() {
     return stk == NULL;
 }
 
@@ -38,7 +39,7 @@ void push(double x) {
 double pop() {
     double x;
     struct cell* next;
-    if (empty_stack()) {
+    if (is_empty_stack()) {
         fprintf(stderr, "##### スタックが空になっています\n");
         return 0;
     }
@@ -49,16 +50,16 @@ double pop() {
     return x;
 }
 
-int is_valid_ope(char* ope) {
+bool is_valid_ope(char* ope) {
     if (strlen(ope) != 1) return 0;
     switch (ope[0]) {
         case '+':
         case '-':
         case '*':
         case '/':
-            return 1;
+            return true;
         default:
-            return 0;
+            return false;
     }
 }
 
