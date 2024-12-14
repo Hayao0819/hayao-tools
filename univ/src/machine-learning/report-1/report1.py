@@ -6,8 +6,14 @@ import sys
 import matplotlib.pyplot as plt
 import seaborn as sns
 import sklearn
+import sklearn.discriminant_analysis
+import sklearn.linear_model
+import sklearn.model_selection
+import sklearn.preprocessing
+import sklearn.svm
 
 dataDir = "./data"
+modelScores: dict[str, float] = {}
 
 
 def readCsv(name: str) -> pd.DataFrame:
@@ -74,6 +80,75 @@ def getPreparedTrain():
     return normalizedTrain(onehotTrain(df))
 
 
+def learn():
+    finaldf = getPreparedTrain()
+
+    x = finaldf[
+        [
+            "Pclass",
+            "Age",
+            "SibSp",
+            "Parch",
+            "Fare",
+            "is_male",
+            "Embarked_C",
+            "Embarked_S",
+        ]
+    ]
+    y = finaldf["Survived"]
+
+    return sklearn.model_selection.train_test_split(
+        x, y, test_size=0.3, random_state=42
+    )
+
+
+def runModels() -> None:
+    X_train, X_test, y_train, y_test = learn()
+
+    def runLDA() -> None:
+        model = sklearn.linear_model.LogisticRegression()
+        model.fit(X_train, y_train)
+        score = model.score(X_test, y_test)
+        modelScores["LDA"] = score
+
+    def runSVM() -> None:
+        # 特徴量のスケーリング
+        scaler = sklearn.preprocessing.StandardScaler()
+        X_train_scaled = scaler.fit_transform(X_train)
+        X_test_scaled = scaler.transform(X_test)
+
+        # SVMモデルの訓練
+        svm_model = sklearn.svm.SVC(kernel="rbf", random_state=42)
+        svm_model.fit(X_train_scaled, y_train)
+
+        # モデルの評価
+        score = svm_model.score(X_test_scaled, y_test)
+        modelScores["SVM"] = score
+
+    def runQDA() -> None:
+        # 特徴量のスケーリング
+        scaler = sklearn.preprocessing.StandardScaler()
+        X_train_scaled = scaler.fit_transform(X_train)
+        X_test_scaled = scaler.transform(X_test)
+
+        # QDAモデルの訓練
+        qda_model = sklearn.discriminant_analysis.QuadraticDiscriminantAnalysis()
+        qda_model.fit(X_train_scaled, y_train)
+
+        # モデルの評価
+        score = qda_model.score(X_test_scaled, y_test)
+        modelScores["QDA"] = score
+
+    runLDA()
+    runSVM()
+    runQDA()
+    showModelScores()
+
+
+def showModelScores() -> None:
+    print(modelScores)
+
+
 def graphCorrCmd() -> None:
     edited_train = getCompletedNumericTrain()
 
@@ -105,9 +180,11 @@ def graphSurviveCorr() -> None:
 
 
 def titanicCmd() -> None:
-    prepared = getPreparedTrain()
-    prepared.info()
-    print(prepared.head(3))
+    # prepared = getPreparedTrain()
+    # prepared.info()
+    # print(prepared.head(3))
+
+    runModels()
 
 
 def main() -> int:
