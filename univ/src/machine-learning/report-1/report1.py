@@ -128,7 +128,13 @@ def runModels(way: str | None = None) -> None:
         score = model.score(x_test, y_test)
         y_pred = model.predict(x_test)
         tn, fp, fn, tp = sklearn.metrics.confusion_matrix(y_test, y_pred).ravel()
-        return {"score": score, "tn": int(tn), "tp": int(tp), "fn": int(fn), "fp": int(fp)}
+        return {
+            "score": score,
+            "tn": int(tn),
+            "tp": int(tp),
+            "fn": int(fn),
+            "fp": int(fp),
+        }
 
     methodsList["LDA"] = runLDA
 
@@ -145,7 +151,13 @@ def runModels(way: str | None = None) -> None:
         y_pred = svm_model.predict(X_test_scaled)
         tn, fp, fn, tp = sklearn.metrics.confusion_matrix(y_test, y_pred).ravel()
 
-        return {"score": score, "tn": int(tn), "tp": int(tp), "fn": int(fn), "fp": int(fp)}
+        return {
+            "score": score,
+            "tn": int(tn),
+            "tp": int(tp),
+            "fn": int(fn),
+            "fp": int(fp),
+        }
 
     methodsList["SVM"] = runSVM
 
@@ -165,7 +177,13 @@ def runModels(way: str | None = None) -> None:
         y_pred = qda_model.predict(x_test)
         tn, fp, fn, tp = sklearn.metrics.confusion_matrix(y_test, y_pred).ravel()
 
-        return {"score": score, "tn": int(tn), "tp": int(tp), "fn": int(fn), "fp": int(fp)}
+        return {
+            "score": score,
+            "tn": int(tn),
+            "tp": int(tp),
+            "fn": int(fn),
+            "fp": int(fp),
+        }
 
     methodsList["QDA"] = runQDA
 
@@ -179,7 +197,13 @@ def runModels(way: str | None = None) -> None:
         tn, fp, fn, tp = sklearn.metrics.confusion_matrix(y_test, y_pred).ravel()
 
         # モデルの評価
-        return {"score": score, "tn": int(tn), "tp": int(tp), "fn": int(fn), "fp": int(fp)}
+        return {
+            "score": score,
+            "tn": int(tn),
+            "tp": int(tp),
+            "fn": int(fn),
+            "fp": int(fp),
+        }
 
     methodsList["DecisionTree"] = runDecisionTree
 
@@ -193,7 +217,13 @@ def runModels(way: str | None = None) -> None:
         score = sklearn.metrics.accuracy_score(y_test, y_pred)
         tn, fp, fn, tp = sklearn.metrics.confusion_matrix(y_test, y_pred).ravel()
 
-        return {"score": score, "tn": int(tn), "tp": int(tp), "fn": int(fn), "fp": int(fp)}
+        return {
+            "score": score,
+            "tn": int(tn),
+            "tp": int(tp),
+            "fn": int(fn),
+            "fp": int(fp),
+        }
 
     methodsList["RandomForest"] = runRandomForest
 
@@ -206,13 +236,45 @@ def runModels(way: str | None = None) -> None:
 
 
 def showModelScores() -> None:
-    print(
-        dict(
-            sorted(
-                modelResults.items(), key=lambda item: item[1]["score"], reverse=True
+    printAsTypst = True
+    if not printAsTypst:
+        print(
+            dict(
+                sorted(
+                    modelResults.items(),
+                    key=lambda item: item[1]["score"],
+                    reverse=True,
+                )
             )
         )
-    )
+    else:
+        for [index, [key, value]] in enumerate(modelResults.items()):
+            # print(index, key, value)
+            score = round(value["score"], 12)
+            tn = value["tn"]
+            tp = value["tp"]
+            fn = value["fn"]
+            fp = value["fp"]
+            print(
+                f'"{key}",  "{score}" ,"{tp}", "{tn}", "{fp}", "{fn}"',
+                end="," if index != len(modelResults) - 1 else "\n",
+            )
+        for [index, [key, value]] in enumerate(modelResults.items()):
+            # print(index, key, value)
+            score = round(value["score"], 5)
+
+            tn = value["tn"]
+            tp = value["tp"]
+            fn = value["fn"]
+            fp = value["fp"]
+
+            presicion = round(tp / (tp + fp), 5)
+            recall = round(tp / (tp + fn), 5)
+            f1 = round(2 * (presicion * recall) / (presicion + recall), 5)
+            print(
+                f'"{key}",  "{score}" ,"{presicion}", "{recall}", "{f1}"',
+                end="," if index != len(modelResults) - 1 else "\n",
+            )
 
 
 def graphCorrCmd() -> None:
