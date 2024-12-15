@@ -27,6 +27,8 @@ train = readCsv("train.csv")
 test = readCsv("test.csv")
 genderSubmission = readCsv("gender_submission.csv")
 
+ExitCode = int | str | None
+
 
 def rawInfoCmd() -> None:
     train.info()
@@ -193,6 +195,23 @@ def graphCorrCmd() -> None:
     edited_train.info()
 
 
+def graphPreparedCorrCmd() -> None:
+    t = getPreparedTrain()
+
+    # 相関係数行列の計算
+    correlation_matrix = t.corr()
+
+    # ヒートマップの作成
+    plt.figure(figsize=(12, 10))
+    sns.heatmap(
+        correlation_matrix, annot=True, cmap="coolwarm", vmin=-1, vmax=1, center=0
+    )
+    plt.title("Correlation Heatmap of Numeric Features")
+    plt.show()
+
+    t.info()
+
+
 def graphSurviveCorr() -> None:
     edited_train = getCompletedNumericTrain()
     survival_correlation = edited_train["Survived"].abs().sort_values(ascending=False)
@@ -255,28 +274,29 @@ def graphPclass() -> None:
     plt.show()
 
 
-def main() -> int:
-    if len(sys.argv) == 1:
-        titanicCmd()
-    else:
-        match sys.argv[1]:
-            case "prepared-info":
-                preparedInfoCmd()
-            case "completed-info":
-                completedInfoCmd()
-            case "raw-info":
-                rawInfoCmd()
-            case "graph-corr":
-                graphCorrCmd()
-            case "graph-survive":
-                graphSurviveCorr()
-            case "graph-enum":
-                return graphEnumValue(sys.argv[2] if len(sys.argv) >= 3 else "")
-            case "graph-pclass":
-                graphPclass()
-            case _:
-                print("Undefined command", file=sys.stderr)
-                return 1
+def main() -> ExitCode:
+    match sys.argv[1] if len(sys.argv) == 1 else "":
+        case "prepared-info":
+            preparedInfoCmd()
+        case "completed-info":
+            completedInfoCmd()
+        case "raw-info":
+            rawInfoCmd()
+        case "graph-prepared-corr":
+            graphPreparedCorrCmd()
+        case "graph-corr":
+            graphCorrCmd()
+        case "graph-survive":
+            graphSurviveCorr()
+        case "graph-enum":
+            return graphEnumValue(sys.argv[2] if len(sys.argv) >= 3 else "")
+        case "graph-pclass":
+            graphPclass()
+        case "":
+            titanicCmd()
+        case _:
+            print("Undefined command", file=sys.stderr)
+            return 1
     return 0
 
 
