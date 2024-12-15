@@ -196,7 +196,7 @@ def graphCorrCmd() -> None:
 
 
 def graphPreparedCorrCmd() -> None:
-    t = getPreparedTrain()
+    t = getPreparedTrain()[["Survived", "Pclass", "Age", "SibSp", "Parch", "Fare", "isMale", "EmbarkedC", "EmbarkedQ", "EmbarkedS"]]
 
     # 相関係数行列の計算
     correlation_matrix = t.corr()
