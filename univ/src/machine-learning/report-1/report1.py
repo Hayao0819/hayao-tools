@@ -15,8 +15,12 @@ import sklearn.preprocessing
 import sklearn.svm
 import sklearn.tree
 
+import typing
+
+# import types
+
 dataDir = "./data"
-modelScores: dict[str, float] = {}
+modelResults: dict[str, dict[str, float]] = {}
 
 
 def readCsv(name: str) -> pd.DataFrame:
@@ -112,70 +116,103 @@ def learn():
     )
 
 
-def runModels() -> None:
-    X_train, X_test, y_train, y_test = learn()
+def runModels(way: str | None = None) -> None:
+    x_train, x_test, y_train, y_test = learn()
 
-    def runLDA() -> None:
+    # RunMethod = typing.Callable[[None], None]
+    methodsList: dict[str, typing.Callable[[], dict[str, float]]] = {}
+
+    def runLDA() -> dict:
         model = sklearn.discriminant_analysis.LinearDiscriminantAnalysis()
-        model.fit(X_train, y_train)
-        score = model.score(X_test, y_test)
-        modelScores["LDA"] = score
+        model.fit(x_train, y_train)
+        score = model.score(x_test, y_test)
+        y_pred = model.predict(x_test)
+        tn, fp, fn, tp = sklearn.metrics.confusion_matrix(y_test, y_pred).ravel()
+        return {"score": score, "tn": int(tn), "tp": int(tp), "fn": int(fn), "fp": int(fp)}
 
-    def runSVM() -> None:
+    methodsList["LDA"] = runLDA
+
+    def runSVM() -> dict:
         # 特徴量のスケーリング
         scaler = sklearn.preprocessing.StandardScaler()
-        X_train_scaled = scaler.fit_transform(X_train)
-        X_test_scaled = scaler.transform(X_test)
+        X_train_scaled = scaler.fit_transform(x_train)
+        X_test_scaled = scaler.transform(x_test)
 
-        # SVMモデルの訓練
         svm_model = sklearn.svm.SVC(kernel="rbf", random_state=42)
         svm_model.fit(X_train_scaled, y_train)
 
-        # モデルの評価
         score = svm_model.score(X_test_scaled, y_test)
-        modelScores["SVM"] = score
+        y_pred = svm_model.predict(X_test_scaled)
+        tn, fp, fn, tp = sklearn.metrics.confusion_matrix(y_test, y_pred).ravel()
 
-    def runQDA() -> None:
+        return {"score": score, "tn": int(tn), "tp": int(tp), "fn": int(fn), "fp": int(fp)}
+
+    methodsList["SVM"] = runSVM
+
+    def runQDA() -> dict:
         # 特徴量のスケーリング
         scaler = sklearn.preprocessing.StandardScaler()
-        X_train_scaled = scaler.fit_transform(X_train)
-        X_test_scaled = scaler.transform(X_test)
+        X_train_scaled = scaler.fit_transform(x_train)
+        X_test_scaled = scaler.transform(x_test)
 
         # QDAモデルの訓練
         qda_model = sklearn.discriminant_analysis.QuadraticDiscriminantAnalysis()
         qda_model.fit(X_train_scaled, y_train)
 
-        # モデルの評価
         score = qda_model.score(X_test_scaled, y_test)
-        modelScores["QDA"] = score
-
-    def runDecisionTree() -> None:
-        # 決定木モデルの訓練
-        dt_model = sklearn.tree.DecisionTreeClassifier(random_state=42)
-        dt_model.fit(X_train, y_train)
 
         # モデルの評価
-        score = dt_model.score(X_test, y_test)
-        modelScores["DecisionTree"] = score
+        y_pred = qda_model.predict(x_test)
+        tn, fp, fn, tp = sklearn.metrics.confusion_matrix(y_test, y_pred).ravel()
 
-    def runRandomForest() -> None:
+        return {"score": score, "tn": int(tn), "tp": int(tp), "fn": int(fn), "fp": int(fp)}
+
+    methodsList["QDA"] = runQDA
+
+    def runDecisionTree() -> dict:
+        # 決定木モデルの訓練
+        model = sklearn.tree.DecisionTreeClassifier(random_state=42)
+        model.fit(x_train, y_train)
+
+        score = model.score(x_test, y_test)
+        y_pred = model.predict(x_test)
+        tn, fp, fn, tp = sklearn.metrics.confusion_matrix(y_test, y_pred).ravel()
+
+        # モデルの評価
+        return {"score": score, "tn": int(tn), "tp": int(tp), "fn": int(fn), "fp": int(fp)}
+
+    methodsList["DecisionTree"] = runDecisionTree
+
+    def runRandomForest() -> dict:
         rf_model = sklearn.ensemble.RandomForestClassifier(
             n_estimators=100, random_state=42
         )
-        rf_model.fit(X_train, y_train)
-        y_pred = rf_model.predict(X_test)
-        accuracy = sklearn.metrics.accuracy_score(y_test, y_pred)
-        modelScores["RandomForest"] = accuracy
+        rf_model.fit(x_train, y_train)
+        y_pred = rf_model.predict(x_test)
 
-    runLDA()
-    runSVM()
-    runQDA()
-    runDecisionTree()
-    runRandomForest()
+        score = sklearn.metrics.accuracy_score(y_test, y_pred)
+        tn, fp, fn, tp = sklearn.metrics.confusion_matrix(y_test, y_pred).ravel()
+
+        return {"score": score, "tn": int(tn), "tp": int(tp), "fn": int(fn), "fp": int(fp)}
+
+    methodsList["RandomForest"] = runRandomForest
+
+    if way == None or way == "":
+        for [name, m] in methodsList.items():
+            modelResults[name] = m()
+    else:
+        way = str(way)
+        modelResults[way] = methodsList[way]()
 
 
 def showModelScores() -> None:
-    print(dict(sorted(modelScores.items(), key=lambda item: item[1], reverse=True)))
+    print(
+        dict(
+            sorted(
+                modelResults.items(), key=lambda item: item[1]["score"], reverse=True
+            )
+        )
+    )
 
 
 def graphCorrCmd() -> None:
@@ -196,7 +233,20 @@ def graphCorrCmd() -> None:
 
 
 def graphPreparedCorrCmd() -> None:
-    t = getPreparedTrain()[["Survived", "Pclass", "Age", "SibSp", "Parch", "Fare", "isMale", "EmbarkedC", "EmbarkedQ", "EmbarkedS"]]
+    t = getPreparedTrain()[
+        [
+            "Survived",
+            "Pclass",
+            "Age",
+            "SibSp",
+            "Parch",
+            "Fare",
+            "isMale",
+            "EmbarkedC",
+            "EmbarkedQ",
+            "EmbarkedS",
+        ]
+    ]
 
     # 相関係数行列の計算
     correlation_matrix = t.corr()
@@ -252,8 +302,8 @@ def graphEnumValue(feature: str) -> int:
     return 0
 
 
-def titanicCmd() -> None:
-    runModels()
+def titanicCmd(arg: str | None = None) -> None:
+    runModels(arg)
     showModelScores()
 
 
@@ -292,8 +342,8 @@ def main() -> ExitCode:
             return graphEnumValue(sys.argv[2] if len(sys.argv) >= 3 else "")
         case "graph-pclass":
             graphPclass()
-        case "":
-            titanicCmd()
+        case "" | "run":
+            titanicCmd(sys.argv[2] if len(sys.argv) >= 3 else None)
         case _:
             print("Undefined command", file=sys.stderr)
             return 1
