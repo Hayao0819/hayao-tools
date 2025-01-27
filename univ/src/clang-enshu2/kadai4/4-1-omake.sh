@@ -67,9 +67,9 @@ run_benchmark() {
 
         # Parse report
         local report_csv=()
-        readarray -t report_csv < <(jq -r '.results[] | [.command, .mean][]' "$report_file")
-        printf "%s\n" "${report_csv[@]}" | cut -d " " -f 3 | sed -e "N;s/\n/,/g" | \
-            ./show-graph-csv.sh "$out_dir/${source_code##*/}.png"
+        readarray -t report_csv < <(jq -r '.results[] | [.command, .mean][]' "$report_file" | cut -d " " -f 3 | sed -e "N;s/\n/,/g")
+        printf "%s\n" "${report_csv[@]}" >"$out_dir/${source_code##*/}.csv"
+        printf "%s\n" "${report_csv[@]}" | ./show-graph-csv.sh "$out_dir/${source_code##*/}.png"
     done
 }
 
