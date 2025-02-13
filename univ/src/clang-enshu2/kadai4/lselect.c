@@ -4,8 +4,9 @@
 
 #define SMALL_N 50
 
-int debug = 0;
+#define TIME
 
+#ifdef TIME
 double gettime() {
     struct timeval tp;
     double ret;
@@ -13,6 +14,7 @@ double gettime() {
     ret = (double)(tp.tv_sec & 0x00ffffff) + (double)tp.tv_usec / 1000000;
     return ret;
 }
+#endif
 
 void swap(int* a, int* b) {
     int temp = *a;
@@ -43,6 +45,10 @@ int l_select(int* A, int n, int k) {
 
     int num_groups = (n + 4) / 5;
     int* M = (int*)malloc(num_groups * sizeof(int));
+    if (M == NULL) {
+        fprintf(stderr, "##### メモリ確保に失敗しました\n");
+        exit(1);
+    }
 
     for (int i = 0; i < num_groups; i++) {
         int group_size = (i == num_groups - 1) ? n - i * 5 : 5;
@@ -58,8 +64,20 @@ int l_select(int* A, int n, int k) {
     free(M);
 
     int* S1 = (int*)malloc(n * sizeof(int));
+    if (S1 == NULL) {
+        fprintf(stderr, "##### メモリ確保に失敗しました\n");
+        exit(1);
+    }
     int* S2 = (int*)malloc(n * sizeof(int));
+    if (S2 == NULL) {
+        fprintf(stderr, "##### メモリ確保に失敗しました\n");
+        exit(1);
+    }
     int* S3 = (int*)malloc(n * sizeof(int));
+    if (S3 == NULL) {
+        fprintf(stderr, "##### メモリ確保に失敗しました\n");
+        exit(1);
+    }
     int s1_count = 0, s2_count = 0, s3_count = 0;
 
     for (int i = 0; i < n; i++) {
@@ -111,16 +129,25 @@ int main(int argc, char* argv[]) {
     n = atoi(argv[2]);
 
     if (argc <= 3) {
-        fprintf(stderr, "何番目のデータを選ぶのか指定してください");
+        fprintf(stderr, "#### 何番目のデータを選ぶのか指定してください");
         return 1;
     }
     k = atoi(argv[3]);
 
     data = (int*)malloc(n * sizeof(int));
+    if (data == NULL) {
+        fprintf(stderr, "#### メモリ確保に失敗しました\n");
+        return 1;
+    }
     fp = fopen(datafile, "r");
+    if (fp == NULL) {
+        fprintf(stderr, "#### ファイルを開けませんでした\n");
+        free(data);
+        return 1;
+    }
     for (i = 0; i < n; i++) {
         if (fscanf(fp, "%d", &data[i]) != 1) {
-            fprintf(stderr, "データの読み込みに失敗しました。行数: %d\n", i + 1);
+            fprintf(stderr, "#### データの読み込みに失敗しました。行数: %d\n", i + 1);
             fclose(fp);
             free(data);
             return 1;

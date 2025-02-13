@@ -19,8 +19,9 @@ double gettime() {
 // Knuth版シェルソート関数
 void shellB(int arr[], int n) {
     int k = 1;
-    while (k < n)
+    while (k < n) {
         k = 3 * k + 1;
+    }
     k = k / 3;
 
     while (k > 0) {

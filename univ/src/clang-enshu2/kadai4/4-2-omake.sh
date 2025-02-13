@@ -8,11 +8,11 @@ trap 'rm -rf "$tmpdir"' EXIT ERR INT TERM
 script_path="$(dirname "$(realpath "$0")")"
 cd "$script_path" || exit 1
 
-source_codes=("$script_path/shellB.c" "$script_path/quicksort.c")
+source_codes=("$script_path/select.c" "$script_path/lselect.c")
 
 declare -A bin_files
 data_dir="./data"
-out_dir="$script_path/out/4-1"
+out_dir="$script_path/out/4-2"
 
 make_binary() {
     for source_code in "${source_codes[@]}"; do
@@ -49,7 +49,7 @@ run_benchmark() {
         -r 10
     )
 
-    local data_file="$data_dir/under10M.dat" bench_lines=()
+    local data_file="$data_dir/for-select.dat" bench_lines=()
     for source_code in "${source_codes[@]}"; do
         # Run benchmark
         local report_file="$out_dir/${source_code##*/}.json"
@@ -60,7 +60,7 @@ run_benchmark() {
         readarray -t bench_lines < <(seq 100000 100000 1000000)
         for line in "${bench_lines[@]}"; do
             hyperfine_args+=(
-                "${bin_files["$source_code"]} $data_file $line"
+                "${bin_files["$source_code"]} $data_file $line $(( line / 2 + 1 ))"
             )
         done
         run hyperfine "${hyperfine_args[@]}"

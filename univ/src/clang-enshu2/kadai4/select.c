@@ -4,9 +4,10 @@
 
 #define SMALL_N 50  // テキストp.82下から3行目の「小さい整数」．ここでは50と定義．
 
-int debug = 0;  // debug モード時は1にする
+#define TIME
+// #define DEBUG
 
-// 関数 double gettime(): 前回配布した資料と同じ
+#ifdef TIME
 double gettime() {
     struct timeval tp;
     double ret;
@@ -14,6 +15,7 @@ double gettime() {
     ret = (double)(tp.tv_sec & 0x00ffffff) + (double)tp.tv_usec / 1000000;
     return ret;
 }
+#endif
 
 int gamm[SMALL_N];
 
@@ -23,16 +25,16 @@ int* merge(int* alpha, int n, int* beta, int m) {
     int gamm_used = 0;
     int i, j;
 
-    if (debug) {  // debugモード時は，ソート前のデータを表示
-        printf("α[] = \n");
-        for (i = 0; i < n; i++)
-            printf("%d\n", alpha[i]);
-        printf("\n");
-        printf("β[] = \n");
-        for (j = 0; j < m; j++)
-            printf("%d\n", beta[j]);
-        printf("\n");
-    }
+#ifdef DEBUG
+    printf("α[] = \n");
+    for (i = 0; i < n; i++)
+        printf("%d\n", alpha[i]);
+    printf("\n");
+    printf("β[] = \n");
+    for (j = 0; j < m; j++)
+        printf("%d\n", beta[j]);
+    printf("\n");
+#endif
 
     i = 0;
     j = 0;
@@ -51,17 +53,19 @@ int* merge(int* alpha, int n, int* beta, int m) {
             gamm[gamm_used++] = beta[j++];
     }
     // 教科書ではγそのものを return しているが，γは一時的な格納場所なのでαやβに書き戻す
-    for (i = 0; i < n; i++)
+    for (i = 0; i < n; i++) {
         alpha[i] = gamm[i];
-    for (j = 0; j < m; j++)
-        beta[j] = gamm[n + j];
-
-    if (debug) {  // debugモード時は，ソート後のデータを表示
-        printf("γ[] = \n");
-        for (i = 0; i < n + m; i++)
-            printf("%d\n", gamm[i]);
-        printf("\n");
     }
+    for (j = 0; j < m; j++) {
+        beta[j] = gamm[n + j];
+    }
+
+#ifdef DEBUG
+    printf("γ[] = \n");
+    for (i = 0; i < n + m; i++)
+        printf("%d\n", gamm[i]);
+    printf("\n");
+#endif
 
     return alpha;
 }
@@ -98,6 +102,10 @@ int selectk(int* a, int n, int k) {
     }
     if (k <= u) {
         U = (int*)malloc(u * sizeof(int));
+        if (U == NULL) {
+            fprintf(stderr, "##### メモリ確保に失敗しました\n");
+            exit(1);
+        }
         used = 0;
         for (i = 0; i < n; i++) {
             if (a[i] < p)
@@ -110,6 +118,10 @@ int selectk(int* a, int n, int k) {
     if (k <= v)
         return p;
     V = (int*)malloc((n - v) * sizeof(int));
+    if (V == NULL) {
+        fprintf(stderr, "##### メモリ確保に失敗しました\n");
+        exit(1);
+    }
     used = 0;
     for (i = 0; i < n; i++) {
         if (a[i] > p)
@@ -149,7 +161,11 @@ int main(int argc, char* argv[]) {
     k = atoi(argv[3]);
 
     data = (int*)malloc(n * sizeof(int));  // データ格納場所の確保
-    fp = fopen(datafile, "r");             // データファイルを開く
+    if (data == NULL) {
+        fprintf(stderr, "メモリ確保に失敗しました");
+        return 1;
+    }
+    fp = fopen(datafile, "r");  // データファイルを開く
     for (i = 0; i < n; i++) {
         if (fscanf(fp, "%d", &data[i]) != 1)  // データを１つずつ読み込む。読み込みに失敗したときにはエラーメッセージを出力
         {
@@ -161,11 +177,17 @@ int main(int argc, char* argv[]) {
     }
     fclose(fp);
 
-    time_start = gettime();        // 時間計測開始
+#ifdef TIME
+    time_start = gettime();  // 時間計測開始
+#endif
+
     answer = selectk(data, n, k);  // k番目選択を実行
-    time_end = gettime();          // 時間計測終了
-    printf("答え = %d\n", answer);
+
+#ifdef TIME
+    time_end = gettime();  // 時間計測終了
     fprintf(stderr, "k番目選択の実行時間 = %lf[秒]\n", time_end - time_start);
+#endif
+    printf("答え = %d\n", answer);
 
     free(data);  // データ格納場所を解放
 
