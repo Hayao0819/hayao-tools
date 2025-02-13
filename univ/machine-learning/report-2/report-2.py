@@ -267,41 +267,17 @@ def save_subject_vs_word_count_in_body(data: pd.DataFrame):
     plt.close()
 
 
-def get_bow(testdata: pd.DataFrame, traindata: pd.DataFrame):
-    counter = pd.DataFrame()
-    for idx in traindata.index:
-        buf = pd.Series((traindata.loc[idx, "counter"]))
-        buf = pd.DataFrame(buf)
-        buf["file"] = idx
-        buf["label"] = "train_" + traindata.loc[idx, "label"].astype("str")
-        counter = pd.concat([counter, buf], axis=0)
-    for idx in testdata.index:
-        buf = pd.Series((testdata.loc[idx, "counter"]))
-        buf = pd.DataFrame(buf)
-        buf["file"] = idx
-        buf["label"] = "test"
-        counter = pd.concat([counter, buf], axis=0)
-
-    counter = counter.reset_index()
-    counter = counter.rename(
-        columns={0: "count"},
-    )
-
-    bow = counter.pivot_table(
-        index="file", columns="index", values="count", aggfunc="sum"
-    ).fillna(0)
-    train_bow = bow[bow.index.str.contains("train_")]
-    test_bow = bow[bow.index.str.contains("test_")]
-    return train_bow, test_bow
-
-
 def multinomial_nb(test_data: pd.DataFrame, train_data: pd.DataFrame) -> pd.DataFrame:
-    test_bow, train_bow = get_bow(test_data, train_data)
-    y_train = train_data["predicted_label"]
-    X_tr, X_val, y_tr, y_val = train_test_split(train_bow, y_train, test_size=0.25)
-    nb = MultinomialNB()
-    model = nb.fit(X_tr, y_tr)
-    test_data["predicted_label"] = model.predict(test_bow)
+    """Multinomial Naive Bayes を用いてスパム予測を行う関数"""
+    vectorizer = CountVectorizer(stop_words="english")
+    X_train, y_train = (
+        vectorizer.fit_transform(train_data["body"]),
+        train_data["label"],
+    )
+    model = MultinomialNB().fit(X_train, y_train)  # MultinomialNB を使用
+    test_data["predicted_label"] = model.predict(
+        vectorizer.transform(test_data["body"])
+    )
     return test_data
 
 
@@ -349,7 +325,7 @@ def save_all_graphs(data: pd.DataFrame):
 
 def guess(traindata: pd.DataFrame, testdata: pd.DataFrame):
     for run in [
-        # bernoulli_nb,
+        bernoulli_nb,
         multinomial_nb
     ]:
         train = traindata.copy()
