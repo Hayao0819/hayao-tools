@@ -2,18 +2,20 @@ package main
 
 import (
 	"log"
+	"os"
 
 	"github.com/gin-gonic/gin"
 )
-
-
 
 func startServer() error {
 	r := gin.Default()
 	r.POST("/schedule", scheduleEmail)
 
 	// サーバ起動
-	port := "8080"
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+	}
 	log.Printf("Server running on port %s...", port)
 	if err := r.Run(":" + port); err != nil {
 		return err
