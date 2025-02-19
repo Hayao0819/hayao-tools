@@ -8,6 +8,13 @@ import (
 	"github.com/go-co-op/gocron/v2"
 )
 
+// リクエストデータ構造体
+type ScheduleRequest struct {
+	SendTo         string   `json:"send_to"`
+	DateTime       string   `json:"datetime"`
+	SpreadsheetURL []string `json:"spreadsheet_url"`
+}
+
 func scheduleEmail(c *gin.Context) {
 	var req ScheduleRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -23,9 +30,7 @@ func scheduleEmail(c *gin.Context) {
 
 	_, err = ns.NewJob(
 		gocron.OneTimeJob(gocron.OneTimeJobStartDateTime(date)),
-		gocron.NewTask(func() {
-
-		}),
+		gocron.NewTask(sendMailTask(date, &req)),
 	)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})

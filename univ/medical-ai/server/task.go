@@ -3,7 +3,9 @@ package main
 import (
 	"fmt"
 	"os"
+	"time"
 
+	"github.com/Hayao0819/hayao-tools/univ/medical-ai/server/sendmail"
 	"github.com/Hayao0819/hayao-tools/univ/medical-ai/server/sheet"
 	"github.com/samber/lo"
 )
@@ -28,10 +30,10 @@ func getTotalAverageScore(list []sheet.TestResult) int {
 	return total / len(list)
 }
 
-func sendMailTask(sheets []string) func() {
+func sendMailTask(date time.Time, r *ScheduleRequest) func() {
 	return func() {
 		var res [][]sheet.TestResult = [][]sheet.TestResult{}
-		for _, s := range sheets {
+		for _, s := range r.SpreadsheetURL {
 			r, err := sheet.TestResultFromUrl(s)
 			if err != nil {
 				fmt.Fprintln(os.Stderr, err)
@@ -62,5 +64,27 @@ func sendMailTask(sheets []string) func() {
 
 		fmt.Println(avgs)
 
+		mail := createReportMail(date, avgs, r.SendTo)
+		if err := mail.Send(); err != nil {
+			fmt.Fprintln(os.Stderr, err)
+		}
+
 	}
+}
+
+func createReportMail(date time.Time, result map[string]int, to string) sendmail.Mail {
+	body := ""
+	for mail, score := range result {
+		body += fmt.Sprintf("%s: %d\n", mail, score)
+	}
+
+	sendmail := sendmail.Mail{
+		User:    "hayao",
+		Domain:  "mg.hayao0819.com",
+		Subject: fmt.Sprintf("%sのテスト結果", date.Format("2006-01-02")),
+		Body:    body,
+		To:      []string{to},
+	}
+
+	return sendmail
 }
