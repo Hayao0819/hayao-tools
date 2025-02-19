@@ -15,7 +15,7 @@ export async function POST(request: Request) {
     console.log("スケジュールリクエストを受信:", body)
 
     // バックエンドへの送信をシミュレート
-    const backendResponse = await fetch("https://your-backend-url.com/schedule", {
+    const backendResponse = await fetch("https://gform-notify.onrender.com/schedule", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
