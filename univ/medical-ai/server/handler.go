@@ -15,7 +15,7 @@ type ScheduleRequest struct {
 	SpreadsheetURL []string `json:"spreadsheet_url"`
 }
 
-func scheduleEmail(c *gin.Context) {
+func scheduleHandler(c *gin.Context) {
 	var req ScheduleRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -39,4 +39,8 @@ func scheduleEmail(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"message": "scheduled"})
 
+}
+
+func pingHandler(c *gin.Context) {
+	c.JSON(http.StatusOK, gin.H{"message": "pong"})
 }

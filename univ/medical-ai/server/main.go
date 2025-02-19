@@ -9,7 +9,8 @@ import (
 
 func startServer() error {
 	r := gin.Default()
-	r.POST("/schedule", scheduleEmail)
+	r.POST("/schedule", scheduleHandler)
+	r.GET("/ping", pingHandler)
 
 	// サーバ起動
 	port := os.Getenv("PORT")
