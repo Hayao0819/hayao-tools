@@ -68,9 +68,12 @@ def parse_mail(data: pd.DataFrame) -> pd.DataFrame:
 
 
 def show_info(data: pd.DataFrame):
-    types = data.dtypes
-    print(types)
-
+    print("データの先頭10行:")
+    print(data.head(10))
+    print("\nデータの型情報:")
+    print(data.dtypes)
+    print("\nデータの概要:")
+    print(data.describe(include='all'))
 
 # 'out' ディレクトリが存在しない場合は作成
 if not os.path.exists("out"):
@@ -178,7 +181,7 @@ def save_top_frequent_words_in_body(data: pd.DataFrame):
         palette="coolwarm",
         dodge=True,
     )
-    plt.title("メール本文で最も頻繁に使われる単語上位10個（スパムと非スパムで色分け）")
+    plt.title("メール本文で最も頻繁に使われる単語上位10個")
     plt.xlabel("単語数")
     plt.ylabel("単語")
     plt.savefig(os.path.join(out_dir, "top_10_frequent_words_in_body.png"))
@@ -228,7 +231,7 @@ def save_top_frequent_words_in_subject(data: pd.DataFrame):
         palette="coolwarm",
         dodge=True,
     )
-    plt.title("メール件名で最も頻繁に使われる単語上位10個（スパムと非スパムで色分け）")
+    plt.title("メール件名で最も頻繁に使われる単語上位10個")
     plt.xlabel("単語数")
     plt.ylabel("単語")
     plt.savefig(os.path.join(out_dir, "top_10_frequent_words_in_subject.png"))
@@ -257,7 +260,7 @@ def save_subject_vs_word_count_in_body(data: pd.DataFrame):
     sns.scatterplot(
         x=data["subject_length"],
         y=data["words"],
-        hue=data["label"],  # labelをhueに指定して色分け
+        hue=data["label"],
         palette="coolwarm",
     )
     plt.title("件名の長さと本文の単語数の関係")
@@ -265,7 +268,6 @@ def save_subject_vs_word_count_in_body(data: pd.DataFrame):
     plt.ylabel("本文の単語数")
     plt.savefig(os.path.join(out_dir, "subject_vs_word_count_in_body.png"))
     plt.close()
-
 
 def multinomial_nb(test_data: pd.DataFrame, train_data: pd.DataFrame) -> pd.DataFrame:
     """Multinomial Naive Bayes を用いてスパム予測を行う関数"""
@@ -339,6 +341,7 @@ def guess(traindata: pd.DataFrame, testdata: pd.DataFrame):
 def main() -> int:
     traindata = parse_mail(read_train_data())
     testdata = parse_mail(read_test_data())
+    # show_info(traindata)
     # save_all_graphs(traindata)
     guess(traindata, testdata)
     return 0
