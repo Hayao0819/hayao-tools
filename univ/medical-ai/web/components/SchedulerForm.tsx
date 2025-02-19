@@ -31,8 +31,8 @@ export default function SchedulerForm() {
 
     if (!email || !dateTime || spreadsheetUrls.some((url) => !url)) {
       toast({
-        title: "Error",
-        description: "Please fill in all fields",
+        title: "エラー",
+        description: "すべての項目を入力してください",
         variant: "destructive",
       })
       return
@@ -55,20 +55,20 @@ export default function SchedulerForm() {
 
       if (response.ok) {
         toast({
-          title: "Success",
-          description: "Schedule created successfully",
+          title: "成功",
+          description: "スケジュールが正常に作成されました",
         })
-        // Reset form
+        // フォームをリセット
         setEmail("")
         setDateTime(undefined)
         setSpreadsheetUrls([""])
       } else {
-        throw new Error("Failed to create schedule")
+        throw new Error("スケジュールの作成に失敗しました")
       }
     } catch (error) {
       toast({
-        title: "Error",
-        description: "Failed to create schedule. Please try again.",
+        title: "エラー",
+        description: "スケジュールの作成に失敗しました。もう一度お試しください。",
         variant: "destructive",
       })
     }
@@ -77,47 +77,47 @@ export default function SchedulerForm() {
   return (
     <Card className="w-full max-w-2xl mx-auto">
       <CardHeader>
-        <CardTitle>Schedule Spreadsheet Aggregation</CardTitle>
-        <CardDescription>Enter the details to schedule a spreadsheet aggregation task.</CardDescription>
+        <CardTitle>スプレッドシート集計のスケジュール</CardTitle>
+        <CardDescription>スプレッドシート集計タスクのスケジュールの詳細を入力してください。</CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
+            <Label htmlFor="email">メールアドレス</Label>
             <Input
               id="email"
               type="email"
-              placeholder="Enter your email"
+              placeholder="メールアドレスを入力"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="datetime">Date and Time</Label>
+            <Label htmlFor="datetime">日時</Label>
             <DateTimePicker value={dateTime} onChange={setDateTime} />
           </div>
           <div className="space-y-2">
-            <Label>Spreadsheet URLs</Label>
+            <Label>スプレッドシートURL</Label>
             {spreadsheetUrls.map((url, index) => (
               <Input
                 key={index}
                 type="url"
-                placeholder="Enter spreadsheet URL"
+                placeholder="スプレッドシートのURLを入力"
                 value={url}
                 onChange={(e) => handleUrlChange(index, e.target.value)}
                 required
               />
             ))}
             <Button type="button" variant="outline" onClick={handleAddUrl}>
-              Add Another URL
+              URLを追加
             </Button>
           </div>
         </form>
       </CardContent>
       <CardFooter>
         <Button onClick={handleSubmit} className="w-full">
-          Schedule
+          スケジュール
         </Button>
       </CardFooter>
     </Card>

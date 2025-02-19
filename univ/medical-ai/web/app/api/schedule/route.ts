@@ -10,11 +10,11 @@ export async function POST(request: Request) {
   const body: ScheduleRequest = await request.json()
 
   try {
-    // Here, you would typically send this data to your backend service
-    // For now, we'll just log it and return a success response
-    console.log("Received schedule request:", body)
+    // ここで通常はバックエンドサービスにこのデータを送信します
+    // 今回はログに記録して成功レスポンスを返すだけにします
+    console.log("スケジュールリクエストを受信:", body)
 
-    // Simulate sending to your backend
+    // バックエンドへの送信をシミュレート
     const backendResponse = await fetch("https://your-backend-url.com/schedule", {
       method: "POST",
       headers: {
@@ -24,13 +24,13 @@ export async function POST(request: Request) {
     })
 
     if (!backendResponse.ok) {
-      throw new Error("Backend service failed")
+      throw new Error("バックエンドサービスが失敗しました")
     }
 
-    return NextResponse.json({ message: "Schedule created successfully" }, { status: 200 })
+    return NextResponse.json({ message: "スケジュールが正常に作成されました" }, { status: 200 })
   } catch (error) {
-    console.error("Error creating schedule:", error)
-    return NextResponse.json({ error: "Failed to create schedule" }, { status: 500 })
+    console.error("スケジュールの作成中にエラーが発生しました:", error)
+    return NextResponse.json({ error: "スケジュールの作成に失敗しました" }, { status: 500 })
   }
 }
 

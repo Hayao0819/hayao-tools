@@ -3,6 +3,7 @@
 import * as React from "react"
 import { CalendarIcon } from "@radix-ui/react-icons"
 import { format } from "date-fns"
+import { ja } from "date-fns/locale"
 
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -45,11 +46,11 @@ export function DateTimePicker({ value, onChange }: DateTimePickerProps) {
             className={cn("w-[240px] justify-start text-left font-normal", !date && "text-muted-foreground")}
           >
             <CalendarIcon className="mr-2 h-4 w-4" />
-            {date ? format(date, "PPP") : <span>Pick a date</span>}
+            {date ? format(date, "PPP", { locale: ja }) : <span>日付を選択</span>}
           </Button>
         </PopoverTrigger>
         <PopoverContent className="w-auto p-0" align="start">
-          <Calendar mode="single" selected={date} onSelect={handleDateChange} initialFocus />
+          <Calendar mode="single" selected={date} onSelect={handleDateChange} initialFocus locale={ja} />
         </PopoverContent>
       </Popover>
       <Input type="time" value={date ? format(date, "HH:mm") : ""} onChange={handleTimeChange} className="w-[120px]" />
