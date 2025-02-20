@@ -9,11 +9,13 @@ import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { useToast } from "@/components/ui/use-toast"
 import { DateTimePicker } from "@/components/ui/date-time-picker"
+import { Slider } from "@/components/ui/slider"
 
 export default function SchedulerForm() {
   const [email, setEmail] = useState("")
   const [dateTime, setDateTime] = useState<Date | undefined>(undefined)
   const [spreadsheetUrls, setSpreadsheetUrls] = useState([""])
+  const [passingScore, setPassingScore] = useState(80)
   const { toast } = useToast()
 
   const handleAddUrl = () => {
@@ -42,6 +44,7 @@ export default function SchedulerForm() {
       send_to: email,
       datetime: dateTime.toISOString(),
       spreadsheet_url: spreadsheetUrls.filter((url) => url.trim() !== ""),
+      passing_score: passingScore,
     }
 
     try {
@@ -62,6 +65,7 @@ export default function SchedulerForm() {
         setEmail("")
         setDateTime(undefined)
         setSpreadsheetUrls([""])
+        setPassingScore(80)
       } else {
         throw new Error("スケジュールの作成に失敗しました")
       }
@@ -112,6 +116,17 @@ export default function SchedulerForm() {
             <Button type="button" variant="outline" onClick={handleAddUrl}>
               URLを追加
             </Button>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="passingScore">合格基準点 ({passingScore})</Label>
+            <Slider
+              id="passingScore"
+              min={0}
+              max={100}
+              step={0.1}
+              value={[passingScore]}
+              onValueChange={(value) => setPassingScore(value[0])}
+            />
           </div>
         </form>
       </CardContent>

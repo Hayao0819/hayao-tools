@@ -4,6 +4,7 @@ type ScheduleRequest = {
   send_to: string
   datetime: string
   spreadsheet_url: string[]
+  passing_score: number
 }
 
 export async function POST(request: Request) {

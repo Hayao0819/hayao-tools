@@ -13,6 +13,7 @@ type ScheduleRequest struct {
 	SendTo         string   `json:"send_to"`
 	DateTime       string   `json:"datetime"`
 	SpreadsheetURL []string `json:"spreadsheet_url"`
+	PassingScore   int      `json:"passing_score"`
 }
 
 func scheduleHandler(c *gin.Context) {
