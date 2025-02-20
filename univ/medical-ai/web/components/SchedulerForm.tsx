@@ -51,6 +51,8 @@ export default function SchedulerForm() {
       passing_score: passingScore,
     }
 
+    console.log(payload)
+
     try {
       const response = await fetch("/api/schedule", {
         method: "POST",
