@@ -64,7 +64,7 @@ func sendMailTask(date time.Time, r *ScheduleRequest) func() {
 
 		fmt.Println(avgs)
 
-		mail := createReportMail(date, avgs, r.SendTo)
+		mail := createReportMail(date, avgs, r.SendTo, r.PassingScore)
 		if err := mail.Send(); err != nil {
 			fmt.Fprintln(os.Stderr, err)
 		}
@@ -72,9 +72,13 @@ func sendMailTask(date time.Time, r *ScheduleRequest) func() {
 	}
 }
 
-func createReportMail(date time.Time, result map[string]int, to string) sendmail.Mail {
+func createReportMail(date time.Time, result map[string]int, to string, passingScore int) sendmail.Mail {
 	body := ""
 	for mail, score := range result {
+		if score < passingScore {
+			body += fmt.Sprintf("%s: %d (不合格)\n", mail, score)
+			continue
+		}
 		body += fmt.Sprintf("%s: %d\n", mail, score)
 	}
 
