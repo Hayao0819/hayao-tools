@@ -83,7 +83,7 @@ func createReportMail(date time.Time, result map[string]int, to string, passingS
 	}
 
 	sendmail := sendmail.Mail{
-		User:    "hayao",
+		User:    "gform-notify",
 		Domain:  "mg.hayao0819.com",
 		Subject: fmt.Sprintf("%sのテスト結果", date.Format("2006-01-02")),
 		Body:    body,
