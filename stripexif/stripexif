@@ -1,0 +1,24 @@
+#!/bin/sh
+
+set -e -u
+
+target_dir="${1-"."}"
+
+if [ ! -d "${target_dir}" ]; then
+    echo "Error: ${target_dir} is not a directory" >&2
+    exit 1
+fi
+
+if ! type mogrify >/dev/null 2>&1; then
+    echo "Error: mogrify is not installed" >&2
+    exit 1
+fi
+
+cd "${target_dir}" || exit 1
+
+find . -type f | while read -r file; do
+    if file --mime-type "${file}" | grep -q "image/"; then
+        echo "Stripping EXIF data from ${file}" >&2
+        mogrify -strip "${file}"
+    fi
+done
