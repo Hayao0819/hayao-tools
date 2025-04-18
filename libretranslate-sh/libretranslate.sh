@@ -9,26 +9,22 @@
 LIBRETRANSLATE_URL="${LIBRETRANSLATE_URL:-""}"
 LIBRETRANSLATE_APIKEY="${LIBRETRANSLATE_APIKEY:-""}"
 
-libre_translate_check(){
+libre_translate_check() {
     if [ -z "$LIBRETRANSLATE_URL" ]; then
         echo "LIBRETRANSLATE_URL is not set"
         return 1
     fi
-    if which jq >/dev/null; then
-        return 0
-    else
+    if ! which jq >/dev/null; then
         echo "jq is not installed"
         return 1
     fi
-    if which curl >/dev/null; then
-        return 0
-    else
+    if ! which curl >/dev/null; then
         echo "curl is not installed"
         return 1
     fi
     return 0
 }
-libre_translate_detect(){
+libre_translate_detect() {
     libre_translate_check || return 2
     __libre_translate_return="$(curl -s "${LIBRETRANSLATE_URL}/detect" -X POST -d "q=${1:-""}&api_key=${LIBRETRANSLATE_APIKEY:-""}")"
     if [ "$(echo "${__libre_translate_return}" | jq -r '.[].error')" = "null" ]; then
@@ -39,13 +35,13 @@ libre_translate_detect(){
         return 1
     fi
 }
-libre_translate_languages(){
+libre_translate_languages() {
     libre_translate_check || return 2
     curl -s "${LIBRETRANSLATE_URL}/languages" | jq -r '.[].code'
 }
 
 # libre_translate_translate <text> <source language> <target language>
-libre_translate_translate(){
+libre_translate_translate() {
     libre_translate_check || return 2
     __libre_translate_return="$(curl -s "$LIBRETRANSLATE_URL/translate" -X POST -d "q=${1:-""}&source=${2:-""}&target=${3:-""}&api_key=${LIBRETRANSLATE_APIKEY:-""}")"
     if [ "$(echo "${__libre_translate_return}" | jq -r '.error')" = "null" ]; then
@@ -58,8 +54,7 @@ libre_translate_translate(){
 }
 
 # libre_translate_translate <text> <target language>
-libre_translate_translate_auto(){
+libre_translate_translate_auto() {
     libre_translate_check || return 2
     libre_translate_translate "${1:-""}" "$(libre_translate_detect "${1:-""}")" "${2:-""}"
 }
-
