@@ -1,0 +1,17 @@
+Regular expression: a.(b|c*).(9|Z)*
+LETTER(a)
+CONC
+LPAR
+LETTER(b)
+VERT
+LETTER(c)
+AST
+RPAR
+CONC
+LPAR
+LETTER(9)
+VERT
+LETTER(Z)
+RPAR
+AST
+EOREG

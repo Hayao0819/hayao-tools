@@ -1,0 +1,15 @@
+Regular expression: (a.b)*|(c|\e)*
+LPAR
+LETTER(a)
+CONC
+LETTER(b)
+RPAR
+AST
+VERT
+LPAR
+LETTER(c)
+VERT
+ESCAPE
+RPAR
+AST
+EOREG
