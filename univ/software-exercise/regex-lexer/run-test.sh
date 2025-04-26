@@ -31,7 +31,6 @@ do_test() {
 }
 
 main() {
-
     do_test "./object-like"
     do_test "./basic"
 
