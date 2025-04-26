@@ -30,11 +30,13 @@ void get_token() {
 
     if (c == '\0') {
         curr_token = EOREG;
-    } else if (c == '\\') {
+        return;
+    }
+
+    if (c == '\\') {
         reg_string++;
         c = *reg_string;
         token_val = *reg_string;
-
         switch (c) {
             case 'e':
                 curr_token = ESCAPE;
@@ -60,31 +62,33 @@ void get_token() {
             default:
                 fatal_error("Invalid escape sequence");
         }
-    } else {
-        switch (c) {
-            case '*':
-                curr_token = AST;
-                break;
-            case '.':
-                curr_token = CONC;
-                break;
-            case '(':
-                curr_token = LPAR;
-                break;
-            case ')':
-                curr_token = RPAR;
-                break;
-            case '|':
-                curr_token = VERT;
-                break;
-            default:
-                if (isalpha(c) || isdigit(c)) {
-                    curr_token = LETTER;
-                } else {
-                    fatal_error("Invalid character");
-                }
-                break;
-        }
+        reg_string++;
+        return;
+    }
+
+    switch (c) {
+        case '*':
+            curr_token = AST;
+            break;
+        case '.':
+            curr_token = CONC;
+            break;
+        case '(':
+            curr_token = LPAR;
+            break;
+        case ')':
+            curr_token = RPAR;
+            break;
+        case '|':
+            curr_token = VERT;
+            break;
+        default:
+            if (isalpha(c) || isdigit(c)) {
+                curr_token = LETTER;
+            } else {
+                fatal_error("Invalid character");
+            }
+            break;
     }
 
     reg_string++;

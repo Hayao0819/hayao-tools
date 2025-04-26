@@ -46,7 +46,9 @@ void get_token(Lexer* lexer) {
     if (c == '\0') {
         // curr_token = EOREG;
         lexer->current_token.id = EOREG;
-    } else if (c == '\\') {
+        return;
+    }
+    if (c == '\\') {
         lexer->current_lexing++;
         c = *lexer->current_lexing;
         lexer->current_token.val = *lexer->current_lexing;
@@ -83,37 +85,39 @@ void get_token(Lexer* lexer) {
             default:
                 fatal_error("Invalid escape sequence");
         }
-    } else {
-        switch (c) {
-            case '*':
-                // curr_token = AST;
-                lexer->current_token.id = AST;
-                break;
-            case '.':
-                // curr_token = CONC;
-                lexer->current_token.id = CONC;
-                break;
-            case '(':
-                // curr_token = LPAR;
-                lexer->current_token.id = LPAR;
-                break;
-            case ')':
-                // curr_token = RPAR;
-                lexer->current_token.id = RPAR;
-                break;
-            case '|':
-                // curr_token = VERT;
-                lexer->current_token.id = VERT;
-                break;
-            default:
-                if (isalpha(c) || isdigit(c)) {
-                    // curr_token = LETTER;
-                    lexer->current_token.id = LETTER;
-                } else {
-                    fatal_error("Invalid character");
-                }
-                break;
-        }
+        lexer->current_lexing++;
+        return;
+    }
+
+    switch (c) {
+        case '*':
+            // curr_token = AST;
+            lexer->current_token.id = AST;
+            break;
+        case '.':
+            // curr_token = CONC;
+            lexer->current_token.id = CONC;
+            break;
+        case '(':
+            // curr_token = LPAR;
+            lexer->current_token.id = LPAR;
+            break;
+        case ')':
+            // curr_token = RPAR;
+            lexer->current_token.id = RPAR;
+            break;
+        case '|':
+            // curr_token = VERT;
+            lexer->current_token.id = VERT;
+            break;
+        default:
+            if (isalpha(c) || isdigit(c)) {
+                // curr_token = LETTER;
+                lexer->current_token.id = LETTER;
+            } else {
+                fatal_error("Invalid character");
+            }
+            break;
     }
 
     // reg_string++;
