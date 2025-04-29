@@ -19,14 +19,14 @@ typedef enum Token {
     LETTER,    // a-zA-Z0-9
     EOREG,     // 正規表現の終端
 
-    // いつか対応したい
-    // RSQU,  // [
-    // LSQU,  // ]
-    // HYPHEN,  // -
-    // CARET,  // ^
-    // DOLLAR,  // $
-    // BANG,  // !
-    // QUEST,  // ?
+    // いつか実装したい
+    // RSQU,      // [
+    // LSQU,      // ]
+    // HYPHEN,    // -
+    // CARET,     // ^
+    // DOLLAR,    // $
+    // BANG,      // !
+    // QUEST,     // ?
 } Token;
 
 /* from main.c */

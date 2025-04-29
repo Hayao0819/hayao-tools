@@ -45,17 +45,9 @@ void get_token() {
                 curr_token = NULLCHAR;
                 break;
             case '*':
-                curr_token = LETTER;
-                break;
             case '.':
-                curr_token = LETTER;
-                break;
             case '(':
-                curr_token = LETTER;
-                break;
             case ')':
-                curr_token = LETTER;
-                break;
             case '|':
                 curr_token = LETTER;
                 break;
@@ -83,7 +75,7 @@ void get_token() {
             curr_token = VERT;
             break;
         default:
-            if (isalpha(c) || isdigit(c)) {
+            if (isalpha(c) || isdigit(c) || c == ' ') {
                 curr_token = LETTER;
             } else {
                 fatal_error("Invalid character");
