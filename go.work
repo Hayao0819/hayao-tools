@@ -1,12 +1,9 @@
-go 1.23.0
+go 1.24.2
 
 use (
 	./gistrge
-	./go-and-v/v-calls-go/go
-	./golang-parseargs-demo
+	./ikesou
 	./mydnsjp-renew-le
-	./optical-illusion
-	./slog-sample
-	./univ/medical-ai/server
 	./univ/medical-ai/cli
+	./univ/medical-ai/server
 )
