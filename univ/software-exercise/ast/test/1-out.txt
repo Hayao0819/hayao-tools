@@ -1,0 +1,5 @@
+Regular expression: a.b
+LETTER(a)
+CONC
+LETTER(b)
+EOREG

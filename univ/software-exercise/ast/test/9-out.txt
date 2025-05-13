@@ -1,0 +1,12 @@
+Regular expression: (\0|a.b|\e)*
+LPAR
+NULLCHAR
+VERT
+LETTER(a)
+CONC
+LETTER(b)
+VERT
+ESCAPE
+RPAR
+AST
+EOREG

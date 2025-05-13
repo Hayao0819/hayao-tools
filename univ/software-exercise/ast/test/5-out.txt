@@ -1,0 +1,3 @@
+Regular expression: \0
+NULLCHAR
+EOREG

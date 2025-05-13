@@ -1,0 +1,4 @@
+Regular expression: a*
+LETTER(a)
+AST
+EOREG

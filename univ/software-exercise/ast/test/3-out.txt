@@ -1,0 +1,7 @@
+Regular expression: (a|b)
+LPAR
+LETTER(a)
+VERT
+LETTER(b)
+RPAR
+EOREG

@@ -1,0 +1,6 @@
+Regular expression: A9.Z
+LETTER(A)
+LETTER(9)
+CONC
+LETTER(Z)
+EOREG
