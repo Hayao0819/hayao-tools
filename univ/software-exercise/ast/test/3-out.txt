@@ -1,7 +1,3 @@
-Regular expression: (a|b)
-LPAR
-LETTER(a)
+   LETTER(a)
 VERT
-LETTER(b)
-RPAR
-EOREG
+   LETTER(b)

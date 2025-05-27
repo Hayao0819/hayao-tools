@@ -5,8 +5,16 @@ cd "$(dirname "$0")" || exit 1
 current_dir="$(pwd)"
 test_dir="$current_dir/test"
 
+print_file() {
+    echo -e "- $(basename "$1")"
+    echo
+    echo -e '#sourcecode[```'
+    cat "$1"
+    echo -e '```]'
+}
+
 # do_test DIR
-do_test() {
+do_create_testcase() {
     cd "$1" || return 1
 
     echo "Test: Compiling in $(sed "s|$current_dir||g" < <(pwd))" >&2
@@ -17,21 +25,17 @@ do_test() {
 
     local test_file=""
     for test_file in "$test_dir/"*"-in.txt"; do
-        echo "Test: Running test: $(basename "$test_file")" >&2
-        lexer_out="$(./kadai2 -d2 "$(cat "$test_file")" || true)"
-        expected_out="$(cat "${test_file/in/out}")"
-        if [ "$lexer_out" != "$expected_out" ]; then
-            echo "Test: Test failed for $test_file" >&2
-            diff <(echo "$lexer_out") <(echo "$expected_out") || true
-        else
-            echo "Test: Test passed" >&2
-        fi
+        out_file="${test_file/in/out}"
+        print_file "$test_file"
+        echo
+        print_file "$out_file"
+        echo
     done
     cd "$OLDPWD" || return 1
 }
 
 main() {
-    do_test "."
+    do_create_testcase "."
 }
 
 main "$@"

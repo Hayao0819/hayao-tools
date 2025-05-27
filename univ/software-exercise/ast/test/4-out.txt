@@ -1,4 +1,3 @@
-Regular expression: \e0
-ESCAPE
-LETTER(0)
-EOREG
+   ESCAPE
+CONC
+   LETTER(0)

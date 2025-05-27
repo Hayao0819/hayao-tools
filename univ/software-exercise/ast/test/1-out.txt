@@ -1,5 +1,3 @@
-Regular expression: a.b
-LETTER(a)
+   LETTER(a)
 CONC
-LETTER(b)
-EOREG
+   LETTER(b)

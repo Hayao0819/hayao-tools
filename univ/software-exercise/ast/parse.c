@@ -132,8 +132,8 @@ PTree* make_ptree(Token tok, char val, PTree* left, PTree* right) {
 
     root->tok = tok;
     root->val = val;
-    root->left = left;
-    root->right = right;
+    root->left = (struct PTree*)left;
+    root->right = (struct PTree*)right;
 
     return root;
 }

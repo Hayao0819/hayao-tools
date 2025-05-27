@@ -1,12 +1,8 @@
-Regular expression: (\0|a.b|\e)*
-LPAR
-NULLCHAR
-VERT
-LETTER(a)
-CONC
-LETTER(b)
-VERT
-ESCAPE
-RPAR
+      NULLCHAR
+   VERT
+            LETTER(a)
+         CONC
+            LETTER(b)
+      VERT
+         ESCAPE
 AST
-EOREG
