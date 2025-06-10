@@ -1,0 +1,24 @@
+digraph NFA_ab_star_c {
+    rankdir=LR; // 左から右へ描画
+
+    // ノードのデフォルト設定
+    node [shape = circle, fontsize=12, fontname="Arial"];
+
+    // 開始点を示すためのダミーノードと矢印
+    // dummy_start [shape=plaintext, label=""];
+    // dummy_start -> q0;
+
+    // 状態の定義
+    q0 [label="q0"]; // 初期状態
+    q1 [label="q1"];
+    qb [label="qb"]; // 'b*' の処理を担当する状態
+    q2 [label="q2"];
+    qf [label="qf", shape=doublecircle]; // 受理状態 (二重丸)
+
+    // 遷移の定義
+    q0 -> q1 [label="a"];      // 'a' を読み込んで q0 から q1 へ
+    q1 -> qb [label="ε"];      // q1 から qb へ ε（イプシロン）遷移 (b* の開始)
+    qb -> qb [label="b"];      // qb で 'b' を読み込んで自身に戻る (b の繰り返し)
+    qb -> q2 [label="ε"];      // qb から q2 へ ε遷移 (b* の終了、0回のbも含む)
+    q2 -> qf [label="c"];      // 'c' を読み込んで q2 から qf (受理状態) へ
+}

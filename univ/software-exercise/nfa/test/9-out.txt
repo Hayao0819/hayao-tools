@@ -1,0 +1,4 @@
+NFA
+\e:   0 =>   1
+Initial state:   0
+Final state:   1

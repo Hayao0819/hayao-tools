@@ -1,0 +1,8 @@
+NFA
+LETTER(a)
+AST
+ a:   0 =>   1
+\e:   0 =>   2
+\e:   1 =>   0
+Initial state:   0
+Final state:   2

@@ -1,0 +1,5 @@
+NFA
+LETTER(a)
+ a:   0 =>   1
+Initial state:   0
+Final state:   1

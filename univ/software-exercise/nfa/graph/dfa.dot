@@ -1,0 +1,21 @@
+digraph DFA_abc {
+    rankdir=LR; // 左から右へ描画
+
+    // ノードのデフォルト設定
+    node [shape = circle, fontsize=12, fontname="Arial"];
+
+    // 開始点を示すためのダミーノードと矢印
+    // dummy_start [shape=plaintext, label=""];
+    // dummy_start -> q0;
+
+    // 状態の定義
+    q0 [label="q0"]; // 初期状態
+    q1 [label="q1"];
+    q2 [label="q2"];
+    qf [label="qf", shape=doublecircle]; // 受理状態 (二重丸)
+
+    // 遷移の定義
+    q0 -> q1 [label="a"];      // 'a' を読み込んで q0 から q1 へ
+    q1 -> q2 [label="b"];      // 'b' を読み込んで q1 から q2 へ
+    q2 -> qf [label="c"];      // 'c' を読み込んで q2 から qf (受理状態) へ
+}

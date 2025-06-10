@@ -1,0 +1,17 @@
+NFA
+LETTER(a)
+LPAR
+LETTER(b)
+VERT
+LETTER(c)
+RPAR
+ a:   0 =>   1
+\e:   1 =>   6
+ b:   2 =>   3
+\e:   3 =>   7
+ c:   4 =>   5
+\e:   5 =>   7
+\e:   6 =>   2
+\e:   6 =>   4
+Initial state:   0
+Final state:   7
