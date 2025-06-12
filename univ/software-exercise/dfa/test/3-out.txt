@@ -1,0 +1,25 @@
+DFA(決定性有限オートマトン)
+LETTER(a)
+VERT
+LETTER(b)
+new nvset
+new dvertex(0):We now check DFA vertex 0.
+Printing etable: ...
+label(a): 0[0]1[1]2[0]3[0]4[0]5[1]
+label(b): 0[0]1[0]2[0]3[1]4[0]5[1]
+... end of etable.
+new nvset
+new dvertex(1):new edge: (a)0 => 1
+new nvset
+new dvertex(2):new edge: (b)0 => 2
+We now check DFA vertex 1.
+Printing etable: ...
+... end of etable.
+We now check DFA vertex 2.
+Printing etable: ...
+... end of etable.
+Number of DFA states: 3
+Initial state: 0
+(b) 0 => 2
+(a) 0 => 1
+Final states: 1 2

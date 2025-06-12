@@ -1,0 +1,8 @@
+DFA(決定性有限オートマトン)
+new nvset
+new dvertex(0):We now check DFA vertex 0.
+Printing etable: ...
+... end of etable.
+Number of DFA states: 1
+Initial state: 0
+Final states: 0

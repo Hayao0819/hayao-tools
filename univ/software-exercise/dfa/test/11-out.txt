@@ -1,0 +1,17 @@
+DFA(決定性有限オートマトン)
+CONC
+LETTER(a)
+new nvset
+new dvertex(0):We now check DFA vertex 0.
+Printing etable: ...
+label(a): 0[0]1[0]2[0]3[1]
+... end of etable.
+new nvset
+new dvertex(1):new edge: (a)0 => 1
+We now check DFA vertex 1.
+Printing etable: ...
+... end of etable.
+Number of DFA states: 2
+Initial state: 0
+(a) 0 => 1
+Final states: 1
