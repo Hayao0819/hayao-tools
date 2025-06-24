@@ -1,0 +1,10 @@
+*.tab.c
+*.tab.h
+*.output
+*.yy.c
+*.o
+*.h
+calc
+lexer.c
+
+

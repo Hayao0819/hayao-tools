@@ -1,0 +1,5 @@
+apple
+banana
+cat
+12345
+ZEBRA
