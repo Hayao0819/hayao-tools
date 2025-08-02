@@ -1,0 +1,164 @@
+
+    # レジスタ
+    # $zero                                   | 常にゼロ(書込み不可)
+    # $at                                     | アセンブラ(擬似命令)が使用
+    # $v0 ~ $v1                               | 戻り値
+    # $a0 ~ $a3                               | 引数
+    # $t0 ~ $t7                               | 一時変数用
+    # $s0 ~ $s7                               | 退避が必要な変数用
+    # $t8 ~ $t9                               | 一時変数用
+    # $k0 ~ $k1                               | OS用
+    # $gp                                     | グローバルポインタ
+    # $sp                                     | スタックポインタ
+    # $fp                                     | フレームポインタ
+    # $ra                                     | 戻りアドレス記憶用
+    #
+    # 命令
+    # add                                     | add   $rd, $rs, $rt   | $rd ← $rs + $rt
+    # add unsigned                            | addu  $rd, $rs, $rt   | $rd ← $rs + $rt(オーバーフロー処理なし)
+    # add immediate                           | addi  $rd, $rs, num   | $rd ← $rs + num
+    # add immediate unsigned                  | addiu $rd, $rs, num   | $rd ← $rs + num(オーバーフロー処理なし)
+    # subtract                                | sub   $rd, $rs, $rt   | $rd ← $rs - $rt
+    # subtract unsigned                       | subu $rd, $rs, $rt    | $rd ← $rs - $rt(オーバーフロー処理なし)
+    #
+    # 論理演算
+    # and                                     | and   $rd, $rs, $rt   | $rd ← $rs and $rt
+    # and immediate                           | andi  $rt, $rs, num   | $rt ← $rs and num
+    # or                                      | or    $rd, $rs, $rt   | $rd ← $rs or $rt
+    # or immediate                            | ori   $rt, $rs, num   | $rt ← $rs or num
+    # nor                                     | nor   $rd, $rs, $rt   | $rd ← not ($rs or $rt)
+    # xor                                     | xor   $rd, $rs, $rt   | $rd ← $rs xor $rt
+    # xor immediate                           | xori  $rt, $rs, num   | $rt ← $rs xor num
+    # not                                     | not   $rd, $rs        | $rd ← not $rs
+    #
+    # シフト演算
+    # shift left logical                      | sll   $rd, $rt, num   | $rd ← $rtをnumで指定したビット分だけ左シフト
+    # shift right logical                     | srl   $rd, $rt, num   | $rd ← $rtをnumで指定したビット分だけ右シフト
+    # shift right arithmetic                  | sra   $rd, $rt, num   | $rd ← $rt をnumで指定したビット分だけ右シフト（MSB を保存）
+    #
+    # データ転送
+    # レジスタ
+    # load immediate                          | li    $rt, num        | $rt ← num
+    # load address                            | la    $rt, label      | $rt ← labelの実行アドレス
+    # move                                    | move  $rd, $rs        | $rd ← $rs
+    # メモリ
+    # load word                               | lw    $rt, num        | $rt ← numのアドレスのメモリの内容（ワード）
+    # load word                               | lw    $rt, num($rs)   | $rt ← $rs の値 + numのアドレスのメモリの内容（ワード）
+    # store word                              | sw    $rt, num        | numのアドレスのメモリ ← $rt
+    # store word                              | sw    $rt, num($rs)   | $rs の値 + numのアドレスのメモリ ← $rt
+    #
+    # 分岐命令（ジャンプ）
+    # branch on equal                         | beq   $rs, $rt, label | $rsと$rtの内容が等しければ指定したlabelの命令へ跳ぶ
+    # branch on not equal                     | bne   $rs, $rt, label | $rsと$rtの内容が異なれば指定したlabelの命令へ跳ぶ
+    # branch on greater than or equal to zero | bgez  $rs, label      | $rsの内容が0以上ならば指定したlabelの命令へ跳ぶ
+    # branch on greater than zero             | bgtz  $rs, label      | $rsの内容が0より大きければ指定したlabelの命令へ跳ぶ
+    # branch on less than or equal to zero    | blez  $rs, label      | $rsの内容が0以下ならば指定したlabelの命令へ跳ぶ
+    # branch on less than zero                | bltz  $rs, label      | $rsの内容が0より小さければ指定したlabelの命令へ跳ぶ
+    # branch                                  | b     label           | 指定したlabelの命令へ跳ぶ
+    #
+    # 分岐合成命令
+    # branch on equal to zero                 | beqz  $rs, label      | $rsの内容が0ならば指定したlabelの命令へ跳ぶ
+    # branch on not equal to zero             | bnez  $rs, label      | $rsの内容が0でなければ指定したlabelの命令へ跳ぶ
+    # branch on greater than or equal         | bge   $rs, $rt, label | $rsの内容が$rtの内容以上ならば指定したlabelの命令へ跳ぶ
+    # branch on greater than                  | bgt   $rs, $rt, label | $rsの内容が$rtの内容より大きければ指定したlabelの命令へ跳ぶ
+    # branch on less than or equal            | ble   $rs, $rt, label | $rsの内容が$rtの内容以下ならば指定したlabelの命令へ跳ぶ
+    # branch on less than                     | blt   $rs, $rt, label | $rsの内容が$rtの内容より小さければ指定したlabelの命令へ跳ぶ
+    #
+    # サブルーチン呼び出し
+    # サブルーチンの呼び出しは jal 命令を使う
+    # サブルーチン内の処理が終わり呼び出し元に戻るためには jr 命令を使う
+    # jump and link                           | jal   label           | 次の命令のアドレスを$raに待避し、指定したlabelの命令へ跳ぶ
+    # jump register                           | jr    $rs             | レジスタ$rsで指定した命令へ跳ぶ
+
+
+    # 双子素数
+    # NとN+2が両方素数であるもの
+
+    # このプログラム
+    # 双子素数の小さい方から順番に0x1000A000に格納する
+    # 条件値は$s0に格納される
+.data
+prompt:     .asciiz "素数探索の上限値を入力してください: "
+twin_msg:   .asciiz "双子素数: "
+space:      .asciiz " "
+newline:    .asciiz "\n"
+
+.text
+            .globl  main
+main:
+    # プロンプト表示
+    li      $v0,        4                   # syscallでprint_stringは$v0を4に設定
+    la      $a0,        prompt              # $a0に表示する文字列のアドレスをセット
+    syscall
+
+    # 上限値入力
+    li      $v0,        5                   # syscallでread_intは$v0を5に設定 入力値は$v0に格納される
+    syscall
+    move    $s0,        $v0                 # $s0 = 上限値
+
+    # 上限値+2まで素数判定を実行する
+    addi    $s0,        $s0,        2
+
+    #  s3を2で初期化。前回の素数。
+    li      $s3,        1
+
+    li      $t0,        0x1000A000          # base address to store primes
+    li      $s1,        0
+    li      $s2,        3                   # start from 3
+
+loop:
+    bgt     $s2,        $s0,        end     # if $s2 > $s0 goto end
+    li      $t1,        3                   # divide by >= 3
+
+is_prime:                                   # check whether $s2 is prime
+    # bge   $t1, $s2, store # if $t1 >= $s2 go to store
+    bge     $t1,        $s2,        hutago  # if $t1 >= $s2 go to hutago
+    rem     $t2,        $s2,        $t1     # $t2 = $s2 % $t1 ($t2 = reminder)
+    beq     $t2,        $zero,      skip    # if $t2==0 then $s2 is not prime
+    addi    $t1,        $t1,        2       # add 2 to $t1
+    j       is_prime                        # go back to is_prime
+hutago:
+    addi    $t3,        $s3,        2
+    # 現在調べている数が前回調べているものの+2ならstoreへ飛ぶ
+    beq     $t3,        $s2,        store
+    move    $s3,        $s2
+    j       skip
+
+store:
+    # 出力: "双子素数: "
+    li      $v0,        4
+    la      $a0,        twin_msg
+    syscall
+
+    # 出力: $s3（前回の素数）
+    li      $v0,        1
+    move    $a0,        $s3
+    syscall
+
+    # 出力: 空白文字
+    li      $v0,        4
+    la      $a0,        space
+    syscall
+
+    # 出力: $s2（現在の素数）
+    li      $v0,        1
+    move    $a0,        $s2
+    syscall
+
+    # 出力: 改行
+    li      $v0,        4
+    la      $a0,        newline
+    syscall
+
+    # 素数をメモリに保存（小さい方のみ）
+    sw      $s3,        0($t0)
+    addi    $t0,        $t0,        4       # 次の保存位置へ移動
+    addi    $s1,        $s1,        1       # 個数をインクリメント
+    move    $s3,        $s2
+
+skip:
+    addi    $s2,        $s2,        2       # 次の奇数へ
+    j       loop
+
+end:
+    jr      $ra
