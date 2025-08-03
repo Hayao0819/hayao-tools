@@ -1,7 +1,7 @@
 #!/usr/bin/env runghc
 
-
--- 何故かこれ動かないです
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE UndecidableInstances #-}
 
 class QuickSortable a where
   pickPivot :: [a] -> a
@@ -11,16 +11,15 @@ class QuickSortable a where
   after :: Ord a => a -> [a] -> [a]
   after pivot arr = filter (\n -> n >= pivot) arr
 
--- instance Ord a => QuickSortable a
+instance Ord a => QuickSortable a
 
--- quicksort :: Ord a => [a] -> [a]
--- quicksort [] = []
--- quicksort arr = sortedBefore ++ [pivot] ++ sortedAfter
---   where
---     pivot = pickPivot arr
---     sortedBefore = quicksort (before pivot arr)
---     sortedAfter = quicksort (after pivot arr)
+quicksort :: Ord a => [a] -> [a]
+quicksort [] = []
+quicksort arr = sortedBefore ++ [pivot] ++ sortedAfter
+  where
+    pivot = pickPivot arr
+    sortedBefore = quicksort (before pivot arr)
+    sortedAfter = quicksort (after pivot arr)
 
--- main = do
---   print (quicksort ([1, 2, 4, 2, 7, 9, 6] :: [Int]))
-
+main = do
+  print (quicksort ([1, 2, 4, 2, 7, 9, 6] :: [Int]))
