@@ -1,0 +1,3 @@
+command,mean,stddev,median,user,system,min,max
+/usr/bin/bash /home/hayao/Git/hayao-tools/univ/software-exercise/final-report/benchmark/100-hello.sh,0.00160288637,0.0005374579906044367,0.001560289,0.0005718599999999999,0.0008217499999999999,0.000759654,0.0034040980000000004
+/usr/local/bin/zash /home/hayao/Git/hayao-tools/univ/software-exercise/final-report/benchmark/100-hello.sh,0.09098741536999996,0.021698422285935236,0.1007746635,0.03731803999999998,0.052500919999999986,0.043541467,0.13098616400000002
