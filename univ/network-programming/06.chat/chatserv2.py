@@ -7,7 +7,7 @@ port = 50001
 server = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 server.bind((host,port))
 
-clientlist = []
+clientlist = [] # type: List[Tuple[str, int]]
 
 while True:
     data, client = server.recvfrom(4096)
